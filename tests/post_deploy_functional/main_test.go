@@ -25,7 +25,7 @@ const (
 	infraTFVarFileNameDefault        = "test.tfvars"
 )
 
-func TestVnetModule(t *testing.T) {
+func TestKeyVaultModule(t *testing.T) {
 
 	ctx := types.CreateTestContextBuilder().
 		SetTestConfig(&testimpl.ThisTFModuleConfig{}).

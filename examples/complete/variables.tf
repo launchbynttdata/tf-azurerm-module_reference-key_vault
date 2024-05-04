@@ -124,7 +124,6 @@ variable "resource_names_map" {
 variable "environment" {
   description = "Environment in which the resource should be provisioned like dev, qa, prod etc."
   type        = string
-  default     = "dev"
 }
 
 variable "environment_number" {
@@ -151,8 +150,6 @@ variable "logical_product_family" {
     condition     = can(regex("^[_\\-A-Za-z0-9]+$", var.logical_product_family))
     error_message = "The variable must contain letters, numbers, -, _, and .."
   }
-
-  default = "fdc"
 }
 
 variable "logical_product_service" {
@@ -167,8 +164,6 @@ variable "logical_product_service" {
     condition     = can(regex("^[_\\-A-Za-z0-9]+$", var.logical_product_service))
     error_message = "The variable must contain letters, numbers, -, _, and .."
   }
-
-  default = "vault"
 }
 
 variable "use_azure_region_abbr" {
@@ -294,7 +289,6 @@ variable "use_for_each" {
 
 variable "address_space" {
   type        = list(string)
-  default     = ["10.0.0.0/16"]
   description = "The address space that is used by the virtual network."
 }
 
@@ -347,13 +341,11 @@ variable "subnet_private_endpoint_network_policies_enabled" {
 
 variable "subnet_names" {
   type        = list(string)
-  default     = ["subnet1", "subnet2", "subnet3"]
   description = "A list of public subnets inside the vNet."
 }
 
 variable "subnet_prefixes" {
   type        = list(string)
-  default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
   description = "The address prefix to use for the subnet."
 }
 

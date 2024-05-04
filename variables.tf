@@ -123,7 +123,6 @@ variable "resource_names_map" {
 variable "environment" {
   description = "Environment in which the resource should be provisioned like dev, qa, prod etc."
   type        = string
-  default     = "dev"
 }
 
 variable "environment_number" {
@@ -150,8 +149,6 @@ variable "logical_product_family" {
     condition     = can(regex("^[_\\-A-Za-z0-9]+$", var.logical_product_family))
     error_message = "The variable must contain letters, numbers, -, _, and .."
   }
-
-  default = "fdc"
 }
 
 variable "logical_product_service" {
@@ -166,8 +163,6 @@ variable "logical_product_service" {
     condition     = can(regex("^[_\\-A-Za-z0-9]+$", var.logical_product_service))
     error_message = "The variable must contain letters, numbers, -, _, and .."
   }
-
-  default = "vault"
 }
 
 variable "use_azure_region_abbr" {
