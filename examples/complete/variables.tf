@@ -181,16 +181,16 @@ variable "use_azure_region_abbr" {
 # Variables related to Role assignment
 #########################################
 
-# variable "role_assignments" {
-#   description = "A map of role assignments to be created"
-#   type = map(object({
-#     name                 = optional(string)
-#     scope                = optional(string)
-#     role_definition_name = string
-#     principal_id         = optional(string)
-#   }))
-#   default = {}
-# }
+variable "role_assignments" {
+  description = "A map of role assignments to be created"
+  type = map(object({
+    name                 = optional(string)
+    scope                = optional(string)
+    role_definition_name = string
+    principal_id         = optional(string)
+  }))
+  default = {}
+}
 
 ###########################################
 # Variables related to private DNS zone

@@ -122,6 +122,7 @@ No providers.
 | <a name="module_resource_names"></a> [resource\_names](#module\_resource\_names) | d2lqlh14iel5k2.cloudfront.net/module_library/resource_name/launch | ~> 1.0 |
 | <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group) | d2lqlh14iel5k2.cloudfront.net/module_primitive/resource_group/azurerm | ~> 1.0 |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | d2lqlh14iel5k2.cloudfront.net/module_primitive/key_vault/azurerm | ~> 2.0 |
+| <a name="module_role_assignment"></a> [role\_assignment](#module\_role\_assignment) | d2lqlh14iel5k2.cloudfront.net/module_primitive/role_assignment/azurerm | ~> 1.0 |
 | <a name="module_private_dns_zone"></a> [private\_dns\_zone](#module\_private\_dns\_zone) | d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_zone/azurerm | ~> 1.0 |
 | <a name="module_private_dns_zone_link_vnet"></a> [private\_dns\_zone\_link\_vnet](#module\_private\_dns\_zone\_link\_vnet) | d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_vnet_link/azurerm | ~> 1.0 |
 | <a name="module_private_endpoint"></a> [private\_endpoint](#module\_private\_endpoint) | d2lqlh14iel5k2.cloudfront.net/module_primitive/private_endpoint/azurerm | ~> 1.0 |
@@ -153,6 +154,7 @@ No resources.
 | <a name="input_logical_product_family"></a> [logical\_product\_family](#input\_logical\_product\_family) | (Required) Name of the product family for which the resource is created.<br>    Example: org\_name, department\_name. | `string` | `"fdc"` | no |
 | <a name="input_logical_product_service"></a> [logical\_product\_service](#input\_logical\_product\_service) | (Required) Name of the product service for which the resource is created.<br>    For example, backend, frontend, middleware etc. | `string` | `"vault"` | no |
 | <a name="input_use_azure_region_abbr"></a> [use\_azure\_region\_abbr](#input\_use\_azure\_region\_abbr) | Use Azure region abbreviation in the resource name | `bool` | `true` | no |
+| <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments) | A map of role assignments to be created | <pre>map(object({<br>    name                 = optional(string)<br>    scope                = optional(string)<br>    role_definition_name = string<br>    principal_id         = optional(string)<br>  }))</pre> | `{}` | no |
 | <a name="input_zone_name"></a> [zone\_name](#input\_zone\_name) | Name of the private dns zone | `string` | `"privatelink.vaultcore.azure.net"` | no |
 | <a name="input_soa_record"></a> [soa\_record](#input\_soa\_record) | n/a | <pre>object({<br>    email        = string<br>    expire_time  = number<br>    minimum_ttl  = number<br>    refresh_time = number<br>    retry_time   = number<br>    ttl          = number<br>    tags         = map(string)<br>  })</pre> | `null` | no |
 | <a name="input_private_dns_zone_tags"></a> [private\_dns\_zone\_tags](#input\_private\_dns\_zone\_tags) | Map of tags to be associated with the resource | `map(string)` | `{}` | no |

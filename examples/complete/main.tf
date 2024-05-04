@@ -35,7 +35,7 @@ module "key_vault" {
   network_acls                    = var.network_acls
   public_network_access_enabled   = var.public_network_access_enabled
 
-  //role_assignments = local.role_assignments
+  role_assignments = local.role_assignments
 
   zone_name                       = var.zone_name
   soa_record                      = var.soa_record
@@ -52,8 +52,8 @@ module "key_vault" {
 
 }
 
-# data "azurerm_client_config" "current" {
-# }
+data "azurerm_client_config" "current" {
+}
 
 module "network" {
   source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/virtual_network/azurerm"

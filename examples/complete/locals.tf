@@ -10,9 +10,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 locals {
-  # role_assignments = {
-  #   for key, value in var.role_assignments : key => merge(value, { principal_id = data.azurerm_client_config.current.object_id })
-  # }
+  role_assignments = {
+    for key, value in var.role_assignments : key => merge(value, { principal_id = data.azurerm_client_config.current.object_id })
+  }
 
   vnet_resource_group_name = module.resource_names["resource_group_vnet"].standard
 }

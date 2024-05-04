@@ -58,18 +58,19 @@ module "key_vault" {
   depends_on = [module.resource_group]
 }
 
-//module "role_assignment" {
-// source = "git::https://github.com/launchbynttdata/tf-azurerm-module_primitive-role_assignment.git?ref=1.0.0"
+module "role_assignment" {
+  source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/role_assignment/azurerm"
+  version = "~> 1.0"
 
-// for_each = local.role_assignments
+  for_each = local.role_assignments
 
-//name                 = each.value.name
-// scope                = each.value.scope
-// role_definition_name = each.value.role_definition_name
-//principal_id         = each.value.principal_id
+  name                 = each.value.name
+  scope                = each.value.scope
+  role_definition_name = each.value.role_definition_name
+  principal_id         = each.value.principal_id
 
-// depends_on = [module.key_vault]
-//}
+  depends_on = [module.key_vault]
+}
 
 module "private_dns_zone" {
   source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_zone/azurerm"
@@ -116,5 +117,3 @@ module "private_endpoint" {
 
   depends_on = [module.resource_group]
 }
-
-

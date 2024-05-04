@@ -47,11 +47,11 @@ logical_product_family  = "launch"
 logical_product_service = "vault"
 use_azure_region_abbr   = true
 location                = "eastus"
-/*role_assignments = {
+role_assignments = {
   "kv_admin" = {
     role_definition_name = "Key Vault Administrator"
   }
-}*/
+}
 zone_name                       = "privatelink.vaultcore.azure.net"
 soa_record                      = null
 private_dns_zone_tags           = {}

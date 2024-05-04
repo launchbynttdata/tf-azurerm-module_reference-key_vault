@@ -20,8 +20,8 @@ locals {
     location = var.location
   }
 
-  # role_assignments = {
-  #   for key, value in var.role_assignments : key => merge(value, { scope = module.key_vault.key_vault_id })
-  # }
+  role_assignments = {
+    for key, value in var.role_assignments : key => merge(value, { scope = module.key_vault.key_vault_id })
+  }
 
 }
