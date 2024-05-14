@@ -10,15 +10,14 @@ locals {
     "provisioner" = "terraform"
   }
 
-  key_vault_tags        = merge(var.tags, local.default_tags, { resource_name = local.key_vault_name })
-  resource_group_tags   = merge(var.tags, local.default_tags, { resource_name = local.resource_group_name })
-  private_dns_zone_tags = merge(var.tags, local.default_tags, { resource_name = var.zone_name })
-  private_endpoint_tags = merge(var.tags, local.default_tags, { resource_name = local.endpoint_name })
+  key_vault_tags        = merge({ resource_name = local.key_vault_name }, local.default_tags, var.tags)
+  resource_group_tags   = merge({ resource_name = local.resource_group_name }, local.default_tags, var.tags)
+  private_dns_zone_tags = merge({ resource_name = var.zone_name }, local.default_tags, var.tags)
+  private_endpoint_tags = merge({ resource_name = local.endpoint_name }, local.default_tags, var.tags)
 
   private_dns_zone_link_tags = {
-    for key, value in var.additional_vnet_links : key => merge(var.tags, local.default_tags, { resource_name = key })
+    for key, value in var.additional_vnet_links : key => merge({ resource_name = key }, local.default_tags, var.tags)
   }
-
   resource_group = {
     name     = local.resource_group_name
     location = var.location
