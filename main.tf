@@ -88,14 +88,17 @@ module "private_dns_zone_link_vnet" {
   source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_vnet_link/azurerm"
   version = "~> 1.0"
 
-  link_name             = local.private_dns_zone_link_name
+  for_each = var.additional_vnet_links != null ? var.additional_vnet_links : {}
+
+  link_name             = each.key
   resource_group_name   = local.resource_group_name
   private_dns_zone_name = module.private_dns_zone.zone_name
-  virtual_network_id    = var.virtual_network_id
-  registration_enabled  = var.registration_enabled
-  tags                  = local.private_dns_zone_link_tags
+  virtual_network_id    = each.value
+  registration_enabled  = false
+  tags                  = local.private_dns_zone_link_tags[each.key]
 
   depends_on = [module.resource_group]
+
 }
 
 module "private_endpoint" {

@@ -14,12 +14,6 @@
 # Variables related to Resource Group
 #########################################
 
-variable "resource_group_tags" {
-  description = "Custom tags for the resource group"
-  type        = map(string)
-  default     = {}
-}
-
 variable "location" {
   description = "Location of the resource group and other services in this module."
   type        = string
@@ -58,12 +52,6 @@ variable "sku_name" {
   description = "SKU for the key vault - standard or premium"
   type        = string
   default     = "standard"
-}
-
-variable "custom_tags" {
-  description = "Custom tags for the Key vault"
-  type        = map(string)
-  default     = {}
 }
 
 variable "access_policies" {
@@ -210,24 +198,12 @@ variable "soa_record" {
   default = null
 }
 
-variable "private_dns_zone_tags" {
-  description = "Map of tags to be associated with the resource"
-  type        = map(string)
-  default     = {}
-}
-
 ################################################
 # Variables related to private DNS zone link
 ################################################
 
-variable "registration_enabled" {
-  description = "(Optional) Is auto-registration of virtual machine records in the virtual network in the Private DNS zone enabled? Defaults to false."
-  type        = bool
-  default     = false
-}
-
-variable "private_dns_zone_link_vnet_tags" {
-  description = "Tags to be associated with this resource"
+variable "additional_vnet_links" {
+  description = "The list of Virtual Network ids that should be linked to the DNS Zone. Changing this forces a new resource to be created."
   type        = map(string)
   default     = {}
 }
@@ -269,12 +245,6 @@ variable "request_message" {
   EOT
   type        = string
   default     = ""
-}
-
-variable "private_endpoint_tags" {
-  description = "A map of tags to be attached to this resource"
-  type        = map(string)
-  default     = {}
 }
 
 ########################################
@@ -353,4 +323,18 @@ variable "subnet_service_endpoints" {
   type        = map(any)
   default     = {}
   description = "A map of subnet name to service endpoints to add to the subnet."
+}
+
+variable "vnet_name" {
+  description = "Name of the vnet"
+  type        = string
+}
+
+################################################
+# Tags to be associated with all child modules
+################################################
+variable "tags" {
+  description = "A map of tags to be associated with the resources"
+  type        = map(string)
+  default     = {}
 }

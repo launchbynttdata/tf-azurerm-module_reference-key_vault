@@ -14,12 +14,6 @@
 # Variables related to Resource Group
 #########################################
 
-variable "resource_group_tags" {
-  description = "Custom tags for the resource group"
-  type        = map(string)
-  default     = {}
-}
-
 variable "location" {
   description = "Location of the resource group and other services in this module."
   type        = string
@@ -57,12 +51,6 @@ variable "sku_name" {
   description = "SKU for the key vault - standard or premium"
   type        = string
   default     = "standard"
-}
-
-variable "custom_tags" {
-  description = "Custom tags for the Key vault"
-  type        = map(string)
-  default     = {}
 }
 
 variable "access_policies" {
@@ -118,7 +106,24 @@ variable "resource_names_map" {
     max_length = optional(number, 60)
   }))
 
-  default = {}
+  default = {
+    key_vault = {
+      name       = "kv"
+      max_length = 24
+    }
+    resource_group = {
+      name       = "rg"
+      max_length = 80
+    }
+    private_service_connection = {
+      name       = "pesc"
+      max_length = 80
+    }
+    private_endpoint = {
+      name       = "pe"
+      max_length = 80
+    }
+  }
 }
 variable "environment" {
   description = "Environment in which the resource should be provisioned like dev, qa, prod etc."
@@ -209,29 +214,12 @@ variable "soa_record" {
   default = null
 }
 
-variable "private_dns_zone_tags" {
-  description = "Map of tags to be associated with the resource"
-  type        = map(string)
-  default     = {}
-}
-
 ################################################
 # Variables related to private DNS zone link
 ################################################
 
-variable "virtual_network_id" {
-  description = "The ID of the Virtual Network that should be linked to the DNS Zone. Changing this forces a new resource to be created."
-  type        = string
-}
-
-variable "registration_enabled" {
-  description = "(Optional) Is auto-registration of virtual machine records in the virtual network in the Private DNS zone enabled? Defaults to false."
-  type        = bool
-  default     = false
-}
-
-variable "private_dns_zone_link_vnet_tags" {
-  description = "Tags to be associated with this resource"
+variable "additional_vnet_links" {
+  description = "The list of Virtual Network ids that should be linked to the DNS Zone. Changing this forces a new resource to be created."
   type        = map(string)
   default     = {}
 }
@@ -283,8 +271,11 @@ variable "request_message" {
   default     = ""
 }
 
-variable "private_endpoint_tags" {
-  description = "A map of tags to be attached to this resource"
+################################################
+# Tags to be associated with all child modules
+################################################
+variable "tags" {
+  description = "A map of tags to be associated with the resources"
   type        = map(string)
   default     = {}
 }

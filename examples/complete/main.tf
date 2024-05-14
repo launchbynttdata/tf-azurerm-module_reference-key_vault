@@ -13,9 +13,7 @@
 module "key_vault" {
   source = "../.."
 
-  resource_group_tags = var.resource_group_tags
-  location            = var.location
-
+  location                = var.location
   resource_names_map      = var.resource_names_map
   environment             = var.environment
   environment_number      = var.environment_number
@@ -29,7 +27,6 @@ module "key_vault" {
   soft_delete_retention_days      = var.soft_delete_retention_days
   purge_protection_enabled        = var.purge_protection_enabled
   sku_name                        = var.sku_name
-  custom_tags                     = var.custom_tags
   access_policies                 = var.access_policies
   enable_rbac_authorization       = var.enable_rbac_authorization
   network_acls                    = var.network_acls
@@ -37,19 +34,20 @@ module "key_vault" {
 
   role_assignments = local.role_assignments
 
-  zone_name                       = var.zone_name
-  soa_record                      = var.soa_record
-  private_dns_zone_tags           = var.private_dns_zone_tags
-  virtual_network_id              = module.network.vnet_id
-  registration_enabled            = var.registration_enabled
-  private_dns_zone_link_vnet_tags = var.private_dns_zone_link_vnet_tags
-  subnet_id                       = module.network.vnet_subnets[0]
-  private_dns_zone_group_name     = var.private_dns_zone_group_name
-  is_manual_connection            = var.is_manual_connection
-  subresource_names               = var.subresource_names
-  request_message                 = var.request_message
-  private_endpoint_tags           = var.private_endpoint_tags
+  zone_name                   = var.zone_name
+  soa_record                  = var.soa_record
+  subnet_id                   = module.network.vnet_subnets[0]
+  private_dns_zone_group_name = var.private_dns_zone_group_name
+  is_manual_connection        = var.is_manual_connection
+  subresource_names           = var.subresource_names
+  request_message             = var.request_message
 
+  additional_vnet_links = {
+    "${var.vnet_name}" = module.network.vnet_id
+  }
+  tags = var.tags
+
+  depends_on = [module.network]
 }
 
 data "azurerm_client_config" "current" {
@@ -73,6 +71,7 @@ module "network" {
   subnet_prefixes                                  = var.subnet_prefixes
   subnet_service_endpoints                         = var.subnet_service_endpoints
   resource_group_name                              = local.vnet_resource_group_name
+  vnet_name                                        = var.vnet_name
 
   depends_on = [module.resource_group]
 }

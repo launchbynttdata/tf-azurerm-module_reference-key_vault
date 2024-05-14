@@ -33,3 +33,7 @@ output "access_policies_object_ids" {
 output "key_vault_name" {
   value = module.key_vault.key_vault_name
 }
+
+output "private_dns_zone_id" {
+  value = module.private_dns_zone.id
+}

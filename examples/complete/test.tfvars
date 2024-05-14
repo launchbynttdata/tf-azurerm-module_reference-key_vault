@@ -1,10 +1,8 @@
-resource_group_tags             = {}
 enabled_for_deployment          = false
 enabled_for_template_deployment = false
 soft_delete_retention_days      = 7
 purge_protection_enabled        = false
 sku_name                        = "standard"
-custom_tags                     = {}
 access_policies                 = {}
 enable_rbac_authorization       = true
 network_acls = {
@@ -52,16 +50,12 @@ role_assignments = {
     role_definition_name = "Key Vault Administrator"
   }
 }
-zone_name                       = "privatelink.vaultcore.azure.net"
-soa_record                      = null
-private_dns_zone_tags           = {}
-registration_enabled            = false
-private_dns_zone_link_vnet_tags = {}
-private_dns_zone_group_name     = "vault"
-is_manual_connection            = false
-subresource_names               = ["vault"]
-request_message                 = null
-private_endpoint_tags           = {}
+zone_name                   = "privatelink.vaultcore.azure.net"
+soa_record                  = null
+private_dns_zone_group_name = "vault"
+is_manual_connection        = false
+subresource_names           = ["vault"]
+request_message             = null
 //Variables for networking module
 address_space            = ["10.32.52.0/23"]
 subnet_names             = ["private-endpoint-sbnt"]
@@ -76,4 +70,8 @@ subnet_service_endpoints = {}
 use_for_each             = true
 subnet_private_endpoint_network_policies_enabled = {
   private-endpoint-sbnt = false
+}
+vnet_name = "vnet1"
+tags = {
+  "test_tag" = "test_value"
 }
