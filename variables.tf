@@ -197,8 +197,12 @@ variable "role_assignments" {
 
 variable "zone_name" {
   type        = string
-  description = "Name of the private dns zone"
+  description = "Name of the private dns zone. For public cloud, the default value is `privatelink.vaultcore.azure.net` and for sovereign clouds, the default value is `privatelink.vaultcore.usgovcloudapi.net`"
   default     = "privatelink.vaultcore.azure.net"
+  validation {
+    condition     = contains(["privatelink.vaultcore.azure.net", "privatelink.vaultcore.usgovcloudapi.net"], var.zone_name)
+    error_message = "The zone_name must be either 'privatelink.vaultcore.azure.net' or 'privatelink.vaultcore.usgovcloudapi.net'."
+  }
 }
 
 variable "soa_record" {
