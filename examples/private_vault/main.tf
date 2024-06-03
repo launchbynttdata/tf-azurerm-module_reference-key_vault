@@ -42,10 +42,8 @@ module "key_vault" {
   subresource_names           = var.subresource_names
   request_message             = var.request_message
 
-  additional_vnet_links = {
-    "${var.vnet_name}" = module.network.vnet_id
-  }
-  tags = var.tags
+  additional_vnet_links = var.additional_vnet_links
+  tags                  = var.tags
 
   depends_on = [module.network]
 }
@@ -70,8 +68,9 @@ module "network" {
   subnet_names                                     = var.subnet_names
   subnet_prefixes                                  = var.subnet_prefixes
   subnet_service_endpoints                         = var.subnet_service_endpoints
-  resource_group_name                              = local.vnet_resource_group_name
-  vnet_name                                        = var.vnet_name
+  resource_group_name                              = module.resource_names["resource_group_vnet"].minimal_random_suffix
+  vnet_name                                        = module.resource_names["vnet"].standard
+  tags                                             = var.tags
 
   depends_on = [module.resource_group]
 }
@@ -97,7 +96,7 @@ module "resource_group" {
   source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/resource_group/azurerm"
   version = "~> 1.0"
 
-  name     = local.vnet_resource_group_name
+  name     = module.resource_names["resource_group_vnet"].minimal_random_suffix
   location = var.location
-  tags     = {}
+  tags     = var.tags
 }

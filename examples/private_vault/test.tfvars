@@ -12,32 +12,7 @@ network_acls = {
   virtual_network_subnet_ids = []
 }
 public_network_access_enabled = false
-resource_names_map = {
-  key_vault = {
-    name       = "kv"
-    max_length = 24
-  }
-  resource_group = {
-    name       = "rg"
-    max_length = 80
-  }
-  resource_group_vnet = {
-    name       = "vnetrg"
-    max_length = 80
-  }
-  private_service_connection = {
-    name       = "pesc"
-    max_length = 80
-  }
-  private_endpoint = {
-    name       = "pe"
-    max_length = 80
-  }
-  private_dns_zone_link = {
-    name       = "pdzl"
-    max_length = 80
-  }
-}
+
 environment             = "sandbox"
 environment_number      = "000"
 resource_number         = "000"
@@ -71,7 +46,7 @@ use_for_each             = true
 subnet_private_endpoint_network_policies_enabled = {
   private-endpoint-sbnt = false
 }
-vnet_name = "vnet1"
+
 tags = {
-  "test_tag" = "test_value"
+  Purpose = "Terraform Examples"
 }

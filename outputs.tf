@@ -11,29 +11,41 @@
 // limitations under the License.
 
 output "resource_group_id" {
-  value = module.resource_group.id
+  description = "ID of the Resource Group"
+  value       = module.resource_group.id
 }
 
 output "resource_group_name" {
-  value = module.resource_group.name
+  description = "Name of the Resource Group"
+  value       = module.resource_group.name
 }
 
 output "key_vault_id" {
-  value = module.key_vault.key_vault_id
+  description = "ID of the Key Vault"
+  value       = module.key_vault.key_vault_id
 }
 
 output "vault_uri" {
-  value = module.key_vault.vault_uri
+  description = "URI of the Key Vault"
+  value       = module.key_vault.vault_uri
 }
 
 output "access_policies_object_ids" {
-  value = module.key_vault.access_policies_object_ids
+  description = "Object IDs of the Key Vault Access Policies"
+  value       = module.key_vault.access_policies_object_ids
 }
 
 output "key_vault_name" {
-  value = module.key_vault.key_vault_name
+  description = "Name of the Key Vault"
+  value       = module.key_vault.key_vault_name
 }
 
 output "private_dns_zone_id" {
-  value = module.private_dns_zone.id
+  description = "ID of the Private DNS Zone"
+  value       = try(module.private_dns_zone[0].id, "")
+}
+
+output "private_endpoint_id" {
+  description = "ID of the Private Endpoint"
+  value       = try(module.private_endpoint[0].id, "")
 }

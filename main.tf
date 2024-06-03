@@ -62,10 +62,10 @@ module "role_assignment" {
   source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/role_assignment/azurerm"
   version = "~> 1.0"
 
-  for_each = local.role_assignments
+  for_each = var.role_assignments
 
   name                 = each.value.name
-  scope                = each.value.scope
+  scope                = module.key_vault.key_vault_id
   role_definition_name = each.value.role_definition_name
   principal_id         = each.value.principal_id
 
@@ -75,6 +75,8 @@ module "role_assignment" {
 module "private_dns_zone" {
   source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_zone/azurerm"
   version = "~> 1.0"
+
+  count = var.public_network_access_enabled ? 0 : 1
 
   resource_group_name = local.resource_group_name
   zone_name           = var.zone_name
@@ -88,14 +90,31 @@ module "private_dns_zone_link_vnet" {
   source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_vnet_link/azurerm"
   version = "~> 1.0"
 
-  for_each = var.additional_vnet_links != null ? var.additional_vnet_links : {}
+  count = var.public_network_access_enabled ? 0 : 1
+
+  link_name             = "private_endpoint_vnet_link"
+  resource_group_name   = local.resource_group_name
+  private_dns_zone_name = module.private_dns_zone[0].zone_name
+  virtual_network_id    = local.vnet_id
+  registration_enabled  = false
+  tags                  = merge({ resource_name = "private_endpoint_vnet_link" }, local.default_tags, var.tags)
+
+  depends_on = [module.resource_group]
+
+}
+
+module "additional_vnet_links" {
+  source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_vnet_link/azurerm"
+  version = "~> 1.0"
+
+  for_each = var.public_network_access_enabled ? {} : var.additional_vnet_links
 
   link_name             = each.key
   resource_group_name   = local.resource_group_name
-  private_dns_zone_name = module.private_dns_zone.zone_name
+  private_dns_zone_name = module.private_dns_zone[0].zone_name
   virtual_network_id    = each.value
   registration_enabled  = false
-  tags                  = local.private_dns_zone_link_tags[each.key]
+  tags                  = merge({ resource_name = each.key }, local.default_tags, var.tags)
 
   depends_on = [module.resource_group]
 
@@ -105,12 +124,14 @@ module "private_endpoint" {
   source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_endpoint/azurerm"
   version = "~> 1.0"
 
+  count = var.public_network_access_enabled ? 0 : 1
+
   endpoint_name                   = local.endpoint_name
   resource_group_name             = local.resource_group_name
   region                          = var.location
   subnet_id                       = var.subnet_id
   private_dns_zone_group_name     = var.private_dns_zone_group_name
-  private_dns_zone_ids            = [module.private_dns_zone.id]
+  private_dns_zone_ids            = [module.private_dns_zone[0].id]
   is_manual_connection            = var.is_manual_connection
   private_connection_resource_id  = module.key_vault.key_vault_id
   subresource_names               = var.subresource_names

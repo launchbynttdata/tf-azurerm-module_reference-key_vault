@@ -54,7 +54,10 @@ variable "sku_name" {
 }
 
 variable "access_policies" {
-  description = "Additional Access policies for the vault except the current user which are added by default"
+  description = <<EOT
+    Additional Access policies for the vault except the current user which are added by default.
+    Required only when enable_rbac_authorization is set to false.
+  EOT
   type = map(object({
     object_id               = string
     tenant_id               = string
@@ -91,7 +94,10 @@ variable "network_acls" {
 }
 
 variable "public_network_access_enabled" {
-  description = " (Optional) Whether public network access is allowed for this Key Vault. Defaults to true."
+  description = <<EOT
+    (Optional) Whether public network access is allowed for this Key Vault. Defaults to true. If false, then only private
+    endpoints can access the Key Vault.
+  EOT
   type        = bool
   default     = true
 }
@@ -181,10 +187,9 @@ variable "use_azure_region_abbr" {
 #########################################
 
 variable "role_assignments" {
-  description = "A map of role assignments to be created"
+  description = "A map of role assignments to be created. Required only when enable_rbac_authorization is set to true."
   type = map(object({
     name                 = optional(string)
-    scope                = optional(string)
     role_definition_name = string
     principal_id         = optional(string)
   }))
@@ -238,12 +243,13 @@ variable "subnet_id" {
     Changing this forces a new resource to be created.
   EOT
   type        = string
+  default     = null
 }
 
 variable "private_dns_zone_group_name" {
   description = "Specifies the Name of the Private DNS Zone Group."
   type        = string
-  default     = ""
+  default     = "vault"
 }
 
 variable "is_manual_connection" {

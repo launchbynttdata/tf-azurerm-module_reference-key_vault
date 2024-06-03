@@ -107,8 +107,38 @@ variable "resource_names_map" {
     max_length = optional(number, 60)
   }))
 
-  default = {}
+  default = {
+    key_vault = {
+      name       = "kv"
+      max_length = 24
+    }
+    vnet = {
+      name       = "vnet"
+      max_length = 60
+    }
+    resource_group = {
+      name       = "rg"
+      max_length = 80
+    }
+    resource_group_vnet = {
+      name       = "vnetrg"
+      max_length = 80
+    }
+    private_service_connection = {
+      name       = "pesc"
+      max_length = 80
+    }
+    private_endpoint = {
+      name       = "pe"
+      max_length = 80
+    }
+    private_dns_zone_link = {
+      name       = "pdzl"
+      max_length = 80
+    }
+  }
 }
+
 variable "environment" {
   description = "Environment in which the resource should be provisioned like dev, qa, prod etc."
   type        = string
@@ -326,11 +356,6 @@ variable "subnet_service_endpoints" {
   type        = map(any)
   default     = {}
   description = "A map of subnet name to service endpoints to add to the subnet."
-}
-
-variable "vnet_name" {
-  description = "Name of the vnet"
-  type        = string
 }
 
 ################################################
