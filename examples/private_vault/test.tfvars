@@ -13,18 +13,14 @@ network_acls = {
 }
 public_network_access_enabled = false
 
-environment             = "sandbox"
-environment_number      = "000"
-resource_number         = "000"
-logical_product_family  = "launch"
-logical_product_service = "vault"
-use_azure_region_abbr   = true
-location                = "eastus"
-role_assignments = {
-  "kv_admin" = {
-    role_definition_name = "Key Vault Administrator"
-  }
-}
+environment                 = "sandbox"
+environment_number          = "000"
+resource_number             = "000"
+logical_product_family      = "launch"
+logical_product_service     = "vault"
+use_azure_region_abbr       = true
+location                    = "eastus"
+role_assignments            = {}
 zone_name                   = "privatelink.vaultcore.azure.net"
 soa_record                  = null
 private_dns_zone_group_name = "vault"

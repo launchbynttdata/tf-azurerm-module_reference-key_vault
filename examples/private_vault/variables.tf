@@ -197,10 +197,8 @@ variable "use_azure_region_abbr" {
 variable "role_assignments" {
   description = "A map of role assignments to be created"
   type = map(object({
-    name                 = optional(string)
-    scope                = optional(string)
     role_definition_name = string
-    principal_id         = optional(string)
+    principal_id         = string
   }))
   default = {}
 }

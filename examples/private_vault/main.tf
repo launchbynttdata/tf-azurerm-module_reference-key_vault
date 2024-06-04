@@ -69,7 +69,7 @@ module "network" {
   subnet_prefixes                                  = var.subnet_prefixes
   subnet_service_endpoints                         = var.subnet_service_endpoints
   resource_group_name                              = module.resource_names["resource_group_vnet"].minimal_random_suffix
-  vnet_name                                        = module.resource_names["vnet"].standard
+  vnet_name                                        = module.resource_names["vnet"].minimal_random_suffix
   tags                                             = var.tags
 
   depends_on = [module.resource_group]

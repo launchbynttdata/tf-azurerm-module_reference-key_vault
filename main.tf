@@ -64,7 +64,6 @@ module "role_assignment" {
 
   for_each = var.role_assignments
 
-  name                 = each.value.name
   scope                = module.key_vault.key_vault_id
   role_definition_name = each.value.role_definition_name
   principal_id         = each.value.principal_id
