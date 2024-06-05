@@ -23,6 +23,15 @@ variable "location" {
 # Variables related to Key Vault
 #########################################
 
+variable "key_vault_name" {
+  description = <<EOT
+    (Optional) If specified, this module will use this name for key vault else the naming module will create a name.
+    Length must be less than 24 characters
+  EOT
+  type        = string
+  default     = null
+}
+
 variable "enabled_for_deployment" {
   description = "If Azure VM is permitted to retrieve secrets"
   type        = bool
