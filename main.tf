@@ -11,7 +11,7 @@
 // limitations under the License.
 
 module "resource_names" {
-  source  = "d2lqlh14iel5k2.cloudfront.net/module_library/resource_name/launch"
+  source  = "terraform.registry.launch.nttdata.com/module_library/resource_name/launch"
   version = "~> 1.0"
 
   for_each = var.resource_names_map
@@ -28,7 +28,7 @@ module "resource_names" {
 }
 
 module "resource_group" {
-  source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/resource_group/azurerm"
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/resource_group/azurerm"
   version = "~> 1.0"
 
   name     = local.resource_group_name
@@ -37,7 +37,7 @@ module "resource_group" {
 }
 
 module "key_vault" {
-  source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/key_vault/azurerm"
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault/azurerm"
   version = "~> 2.0"
 
   resource_group = local.resource_group
@@ -59,7 +59,7 @@ module "key_vault" {
 }
 
 module "role_assignment" {
-  source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/role_assignment/azurerm"
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/role_assignment/azurerm"
   version = "~> 1.0"
 
   for_each = var.role_assignments
@@ -72,7 +72,7 @@ module "role_assignment" {
 }
 
 module "private_dns_zone" {
-  source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_zone/azurerm"
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_zone/azurerm"
   version = "~> 1.0"
 
   count = var.public_network_access_enabled ? 0 : 1
@@ -86,7 +86,7 @@ module "private_dns_zone" {
 }
 
 module "private_dns_zone_link_vnet" {
-  source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_vnet_link/azurerm"
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_vnet_link/azurerm"
   version = "~> 1.0"
 
   count = var.public_network_access_enabled ? 0 : 1
@@ -103,7 +103,7 @@ module "private_dns_zone_link_vnet" {
 }
 
 module "additional_vnet_links" {
-  source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_vnet_link/azurerm"
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_vnet_link/azurerm"
   version = "~> 1.0"
 
   for_each = var.public_network_access_enabled ? {} : var.additional_vnet_links
@@ -120,7 +120,7 @@ module "additional_vnet_links" {
 }
 
 module "private_endpoint" {
-  source  = "d2lqlh14iel5k2.cloudfront.net/module_primitive/private_endpoint/azurerm"
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_endpoint/azurerm"
   version = "~> 1.0"
 
   count = var.public_network_access_enabled ? 0 : 1

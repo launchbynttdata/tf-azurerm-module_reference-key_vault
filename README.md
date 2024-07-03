@@ -120,14 +120,14 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_resource_names"></a> [resource\_names](#module\_resource\_names) | d2lqlh14iel5k2.cloudfront.net/module_library/resource_name/launch | ~> 1.0 |
-| <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group) | d2lqlh14iel5k2.cloudfront.net/module_primitive/resource_group/azurerm | ~> 1.0 |
-| <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | d2lqlh14iel5k2.cloudfront.net/module_primitive/key_vault/azurerm | ~> 2.0 |
-| <a name="module_role_assignment"></a> [role\_assignment](#module\_role\_assignment) | d2lqlh14iel5k2.cloudfront.net/module_primitive/role_assignment/azurerm | ~> 1.0 |
-| <a name="module_private_dns_zone"></a> [private\_dns\_zone](#module\_private\_dns\_zone) | d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_zone/azurerm | ~> 1.0 |
-| <a name="module_private_dns_zone_link_vnet"></a> [private\_dns\_zone\_link\_vnet](#module\_private\_dns\_zone\_link\_vnet) | d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_vnet_link/azurerm | ~> 1.0 |
-| <a name="module_additional_vnet_links"></a> [additional\_vnet\_links](#module\_additional\_vnet\_links) | d2lqlh14iel5k2.cloudfront.net/module_primitive/private_dns_vnet_link/azurerm | ~> 1.0 |
-| <a name="module_private_endpoint"></a> [private\_endpoint](#module\_private\_endpoint) | d2lqlh14iel5k2.cloudfront.net/module_primitive/private_endpoint/azurerm | ~> 1.0 |
+| <a name="module_resource_names"></a> [resource\_names](#module\_resource\_names) | terraform.registry.launch.nttdata.com/module_library/resource_name/launch | ~> 1.0 |
+| <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group) | terraform.registry.launch.nttdata.com/module_primitive/resource_group/azurerm | ~> 1.0 |
+| <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | terraform.registry.launch.nttdata.com/module_primitive/key_vault/azurerm | ~> 2.0 |
+| <a name="module_role_assignment"></a> [role\_assignment](#module\_role\_assignment) | terraform.registry.launch.nttdata.com/module_primitive/role_assignment/azurerm | ~> 1.0 |
+| <a name="module_private_dns_zone"></a> [private\_dns\_zone](#module\_private\_dns\_zone) | terraform.registry.launch.nttdata.com/module_primitive/private_dns_zone/azurerm | ~> 1.0 |
+| <a name="module_private_dns_zone_link_vnet"></a> [private\_dns\_zone\_link\_vnet](#module\_private\_dns\_zone\_link\_vnet) | terraform.registry.launch.nttdata.com/module_primitive/private_dns_vnet_link/azurerm | ~> 1.0 |
+| <a name="module_additional_vnet_links"></a> [additional\_vnet\_links](#module\_additional\_vnet\_links) | terraform.registry.launch.nttdata.com/module_primitive/private_dns_vnet_link/azurerm | ~> 1.0 |
+| <a name="module_private_endpoint"></a> [private\_endpoint](#module\_private\_endpoint) | terraform.registry.launch.nttdata.com/module_primitive/private_endpoint/azurerm | ~> 1.0 |
 
 ## Resources
 
