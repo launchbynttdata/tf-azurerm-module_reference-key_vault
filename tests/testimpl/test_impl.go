@@ -23,7 +23,7 @@ func TestKeyVaultComplete(t *testing.T, ctx types.TestContext) {
 		t.Fatalf("Unable to get credentials: %v\n", err)
 	}
 
-	t.Run("TestApplicationGatewayID", func(t *testing.T) {
+	t.Run("TestKeyVaultID", func(t *testing.T) {
 		checkKeyVaultID(t, ctx, subscriptionId, cred)
 	})
 }
