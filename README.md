@@ -180,4 +180,7 @@ No resources.
 | <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | Name of the Key Vault |
 | <a name="output_private_dns_zone_id"></a> [private\_dns\_zone\_id](#output\_private\_dns\_zone\_id) | ID of the Private DNS Zone |
 | <a name="output_private_endpoint_id"></a> [private\_endpoint\_id](#output\_private\_endpoint\_id) | ID of the Private Endpoint |
+| <a name="output_certificate_ids"></a> [certificate\_ids](#output\_certificate\_ids) | IDs of the certificates from the Key Vault in the reference module |
+| <a name="output_secret_ids"></a> [secret\_ids](#output\_secret\_ids) | IDs of the secrets from the Key Vault in the reference module |
+| <a name="output_key_ids"></a> [key\_ids](#output\_key\_ids) | IDs of the keys from the Key Vault in the reference module |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

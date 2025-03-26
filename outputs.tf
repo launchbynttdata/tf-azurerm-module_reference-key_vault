@@ -49,3 +49,18 @@ output "private_endpoint_id" {
   description = "ID of the Private Endpoint"
   value       = try(module.private_endpoint[0].id, "")
 }
+
+output "certificate_ids" {
+  description = "IDs of the certificates from the Key Vault in the reference module"
+  value       = module.key_vault.certificate_ids
+}
+
+output "secret_ids" {
+  description = "IDs of the secrets from the Key Vault in the reference module"
+  value       = module.key_vault.secret_ids
+}
+
+output "key_ids" {
+  description = "IDs of the keys from the Key Vault in the reference module"
+  value       = module.key_vault.key_ids
+}
