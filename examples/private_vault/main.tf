@@ -41,6 +41,8 @@ module "key_vault" {
   is_manual_connection        = var.is_manual_connection
   subresource_names           = var.subresource_names
   request_message             = var.request_message
+  certificates                = var.certificates
+  secrets                     = var.secrets
 
   additional_vnet_links = var.additional_vnet_links
   tags                  = var.tags

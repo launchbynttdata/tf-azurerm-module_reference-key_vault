@@ -4,14 +4,25 @@ soft_delete_retention_days      = 7
 purge_protection_enabled        = false
 sku_name                        = "standard"
 access_policies                 = {}
-enable_rbac_authorization       = true
+enable_rbac_authorization       = false
+# Certificates to be imported into the Key Vault
+certificates = {
+  "example_cert_1" = {
+    filepath = "dummy-cert.pfx"
+    password = ""
+  }
+}
+secrets = {
+  "example_secret_1" = "secret_value_1"
+  "example_secret_2" = "secret_value_2"
+}
 network_acls = {
   bypass                     = "AzureServices"
   default_action             = "Allow"
   ip_rules                   = []
   virtual_network_subnet_ids = []
 }
-public_network_access_enabled = false
+public_network_access_enabled = true
 
 environment                 = "sandbox"
 environment_number          = "000"

@@ -111,6 +111,22 @@ variable "public_network_access_enabled" {
   default     = true
 }
 
+variable "certificates" {
+  description = "List of certificates to be imported. If `filepath` is specified then the pfx files should be present in the root of the module (path.root). If `content` is specified then the content of the certificate should be provided in base 64 encoded format. Only one of them should be provided."
+  type = map(object({
+    contents = optional(string)
+    filepath = optional(string)
+    password = string
+  }))
+  default = {}
+}
+
+variable "secrets" {
+  description = "List of secrets (name and value)"
+  type        = map(string)
+  default     = {}
+}
+
 #########################################
 # Variables related to Resource Names
 #########################################
