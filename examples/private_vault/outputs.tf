@@ -35,10 +35,6 @@ output "key_vault_name" {
   value = module.key_vault.key_vault_name
 }
 
-output "private_dns_zone_id" {
-  value = module.key_vault.private_dns_zone_id
-}
-
 output "certificate_ids" {
   description = "IDs of the certificates from the Key Vault in the reference module"
   value       = module.key_vault.certificate_ids

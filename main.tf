@@ -12,7 +12,7 @@
 
 module "resource_names" {
   source  = "terraform.registry.launch.nttdata.com/module_library/resource_name/launch"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   for_each = var.resource_names_map
 
@@ -69,56 +69,9 @@ module "role_assignment" {
   scope                = module.key_vault.key_vault_id
   role_definition_name = each.value.role_definition_name
   principal_id         = each.value.principal_id
+  principal_type       = each.value.principal_type
 
   depends_on = [module.key_vault]
-}
-
-module "private_dns_zone" {
-  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_zone/azurerm"
-  version = "~> 1.0"
-
-  count = var.public_network_access_enabled ? 0 : 1
-
-  resource_group_name = local.resource_group_name
-  zone_name           = var.zone_name
-  soa_record          = var.soa_record
-  tags                = local.private_dns_zone_tags
-
-  depends_on = [module.resource_group]
-}
-
-module "private_dns_zone_link_vnet" {
-  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_vnet_link/azurerm"
-  version = "~> 1.0"
-
-  count = var.public_network_access_enabled ? 0 : 1
-
-  link_name             = "private_endpoint_vnet_link"
-  resource_group_name   = local.resource_group_name
-  private_dns_zone_name = module.private_dns_zone[0].zone_name
-  virtual_network_id    = local.vnet_id
-  registration_enabled  = false
-  tags                  = merge({ resource_name = "private_endpoint_vnet_link" }, local.default_tags, var.tags)
-
-  depends_on = [module.resource_group]
-
-}
-
-module "additional_vnet_links" {
-  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_vnet_link/azurerm"
-  version = "~> 1.0"
-
-  for_each = var.public_network_access_enabled ? {} : var.additional_vnet_links
-
-  link_name             = each.key
-  resource_group_name   = local.resource_group_name
-  private_dns_zone_name = module.private_dns_zone[0].zone_name
-  virtual_network_id    = each.value
-  registration_enabled  = false
-  tags                  = merge({ resource_name = each.key }, local.default_tags, var.tags)
-
-  depends_on = [module.resource_group]
-
 }
 
 module "private_endpoint" {
@@ -132,7 +85,7 @@ module "private_endpoint" {
   region                          = var.location
   subnet_id                       = var.subnet_id
   private_dns_zone_group_name     = var.private_dns_zone_group_name
-  private_dns_zone_ids            = [module.private_dns_zone[0].id]
+  private_dns_zone_ids            = var.private_dns_zone_ids
   is_manual_connection            = var.is_manual_connection
   private_connection_resource_id  = module.key_vault.key_vault_id
   subresource_names               = var.subresource_names

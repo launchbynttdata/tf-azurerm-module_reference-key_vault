@@ -14,7 +14,7 @@ locals {
     current_user = {
       role_definition_name = "Key Vault Administrator"
       principal_id         = data.azurerm_client_config.current.object_id
+      principal_type       = var.role_assignment_type
     }
   }, var.role_assignments)
-
 }

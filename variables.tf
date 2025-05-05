@@ -212,49 +212,13 @@ variable "use_azure_region_abbr" {
 #########################################
 
 variable "role_assignments" {
-  description = "A map of role assignments to be created. Required only when enable_rbac_authorization is set to true."
+  description = "A map of role assignments to be created"
   type = map(object({
     role_definition_name = string
     principal_id         = string
+    principal_type       = string
   }))
   default = {}
-}
-
-###########################################
-# Variables related to private DNS zone
-###########################################
-
-variable "zone_name" {
-  type        = string
-  description = "Name of the private dns zone. For public cloud, the default value is `privatelink.vaultcore.azure.net` and for sovereign clouds, the default value is `privatelink.vaultcore.usgovcloudapi.net`"
-  default     = "privatelink.vaultcore.azure.net"
-  validation {
-    condition     = contains(["privatelink.vaultcore.azure.net", "privatelink.vaultcore.usgovcloudapi.net"], var.zone_name)
-    error_message = "The zone_name must be either 'privatelink.vaultcore.azure.net' or 'privatelink.vaultcore.usgovcloudapi.net'."
-  }
-}
-
-variable "soa_record" {
-  type = object({
-    email        = string
-    expire_time  = number
-    minimum_ttl  = number
-    refresh_time = number
-    retry_time   = number
-    ttl          = number
-    tags         = map(string)
-  })
-  default = null
-}
-
-################################################
-# Variables related to private DNS zone link
-################################################
-
-variable "additional_vnet_links" {
-  description = "The list of Virtual Network ids that should be linked to the DNS Zone. Changing this forces a new resource to be created."
-  type        = map(string)
-  default     = {}
 }
 
 ################################################
@@ -268,6 +232,12 @@ variable "subnet_id" {
   EOT
   type        = string
   default     = null
+}
+
+variable "private_dns_zone_ids" {
+  description = "A list of Private DNS Zone IDs to link with the Private Endpoint."
+  type        = list(string)
+  default     = []
 }
 
 variable "private_dns_zone_group_name" {
