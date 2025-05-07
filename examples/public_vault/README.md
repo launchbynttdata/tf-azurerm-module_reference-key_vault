@@ -1,4 +1,4 @@
-# Private vault example
+# Public vault example
 
  This module provisions a private Key Vault instance by creating a Private Endpoint in the provided subnet. It also enables
  RBAC authorization for the Key Vault.
