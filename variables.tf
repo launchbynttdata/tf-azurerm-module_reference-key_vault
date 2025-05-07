@@ -134,7 +134,7 @@ variable "certificate_issuers" {
       first_name    = optional(string)
       last_name     = optional(string)
       phone         = optional(string)
-    })))
+    })), [])
   }))
   default = {}
 }

@@ -141,7 +141,7 @@ module "generated_certificates" {
   secret_properties           = each.value.secret_properties
   x509_certificate_properties = each.value.x509_certificate_properties
 
-  depends_on = [module.role_assignment]
+  depends_on = [module.certificate_issuers]
 }
 
 module "private_endpoint" {
