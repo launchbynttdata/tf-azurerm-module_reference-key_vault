@@ -23,14 +23,6 @@ variable "location" {
 # Variables related to Key Vault
 #########################################
 
-variable "key_vault_name" {
-  description = <<EOT
-    (Optional) If specified, this module will use this name for key vault else the naming module will create a name.
-    Length must be less than 24 characters
-  EOT
-  type        = string
-  default     = null
-}
 
 variable "enabled_for_deployment" {
   description = "If Azure VM is permitted to retrieve secrets"
@@ -63,10 +55,7 @@ variable "sku_name" {
 }
 
 variable "access_policies" {
-  description = <<EOT
-    Additional Access policies for the vault except the current user which are added by default.
-    Required only when enable_rbac_authorization is set to false.
-  EOT
+  description = "Additional Access policies for the vault except the current user which are added by default"
   type = map(object({
     object_id               = string
     tenant_id               = string
@@ -103,10 +92,7 @@ variable "network_acls" {
 }
 
 variable "public_network_access_enabled" {
-  description = <<EOT
-    (Optional) Whether public network access is allowed for this Key Vault. Defaults to true. If false, then only private
-    endpoints can access the Key Vault.
-  EOT
+  description = " (Optional) Whether public network access is allowed for this Key Vault. Defaults to true."
   type        = bool
   default     = true
 }
@@ -116,7 +102,7 @@ variable "certificates" {
   type = map(object({
     contents = optional(string)
     filepath = optional(string)
-    password = optional(string)
+    password = string
   }))
   default = {}
 }
@@ -149,14 +135,9 @@ variable "generated_certificates" {
       reuse_key  = bool
       key_type   = string
 
-      key_size = optional(number)
-      curve    = optional(string)
-      }), {
-      exportable = true
-      key_type   = "RSA"
-      key_size   = 2048
-      reuse_key  = false
-    })
+      key_size = optional(number, 2048)
+      curve    = optional(string, "P-256")
+    }))
 
     lifetime_action = optional(object({
       action = object({
@@ -170,9 +151,7 @@ variable "generated_certificates" {
 
     secret_properties = optional(object({
       content_type = string
-      }), {
-      content_type = "application/x-pkcs12"
-    })
+    }))
 
     x509_certificate_properties = optional(object({
       key_usage          = list(string)
@@ -210,8 +189,16 @@ variable "resource_names_map" {
       name       = "kv"
       max_length = 24
     }
+    vnet = {
+      name       = "vnet"
+      max_length = 60
+    }
     resource_group = {
       name       = "rg"
+      max_length = 80
+    }
+    resource_group_vnet = {
+      name       = "vnetrg"
       max_length = 80
     }
     private_service_connection = {
@@ -222,8 +209,13 @@ variable "resource_names_map" {
       name       = "pe"
       max_length = 80
     }
+    private_dns_zone_link = {
+      name       = "pdzl"
+      max_length = 80
+    }
   }
 }
+
 variable "environment" {
   description = "Environment in which the resource should be provisioned like dev, qa, prod etc."
   type        = string
@@ -289,29 +281,34 @@ variable "role_assignments" {
   default = {}
 }
 
+variable "role_assignment_type" {
+  description = "The type of role assignment to be created"
+  type        = string
+  default     = "ServicePrincipal"
+}
+
+###########################################
+# Variables related to private DNS zone
+###########################################
+
+variable "zone_name" {
+  type        = string
+  description = "Name of the private dns zone. For public cloud, the default value is `privatelink.vaultcore.azure.net` and for sovereign clouds, the default value is `privatelink.vaultcore.usgovcloudapi.net`"
+  default     = "privatelink.vaultcore.azure.net"
+  validation {
+    condition     = contains(["privatelink.vaultcore.azure.net", "privatelink.vaultcore.usgovcloudapi.net"], var.zone_name)
+    error_message = "The zone_name must be either 'privatelink.vaultcore.azure.net' or 'privatelink.vaultcore.usgovcloudapi.net'."
+  }
+}
+
 ################################################
 # Variables related to private endpoint
 ################################################
 
-variable "subnet_id" {
-  description = <<EOT
-    The ID of the Subnet from which Private IP Addresses will be allocated for this Private Endpoint.
-    Changing this forces a new resource to be created.
-  EOT
-  type        = string
-  default     = null
-}
-
-variable "private_dns_zone_ids" {
-  description = "A list of Private DNS Zone IDs to link with the Private Endpoint."
-  type        = list(string)
-  default     = []
-}
-
 variable "private_dns_zone_group_name" {
   description = "Specifies the Name of the Private DNS Zone Group."
   type        = string
-  default     = "vault"
+  default     = ""
 }
 
 variable "is_manual_connection" {
@@ -341,6 +338,84 @@ variable "request_message" {
   EOT
   type        = string
   default     = ""
+}
+
+########################################
+# Variables related to virtual network
+########################################
+
+variable "use_for_each" {
+  type        = bool
+  description = "Use `for_each` instead of `count` to create multiple resource instances."
+  nullable    = false
+}
+
+variable "address_space" {
+  type        = list(string)
+  description = "The address space that is used by the virtual network."
+}
+
+variable "bgp_community" {
+  type        = string
+  default     = null
+  description = "(Optional) The BGP community attribute in format `<as-number>:<community-value>`."
+}
+
+variable "ddos_protection_plan" {
+  type = object({
+    enable = bool
+    id     = string
+  })
+  default     = null
+  description = "The set of DDoS protection plan configuration"
+}
+
+# If no values specified, this defaults to Azure DNS
+variable "dns_servers" {
+  type        = list(string)
+  default     = []
+  description = "The DNS servers to be used with vNet."
+}
+
+variable "nsg_ids" {
+  type = map(string)
+  default = {
+  }
+  description = "A map of subnet name to Network Security Group IDs"
+}
+
+variable "route_tables_ids" {
+  type        = map(string)
+  default     = {}
+  description = "A map of subnet name to Route table ids"
+}
+
+variable "subnet_delegation" {
+  type        = map(map(any))
+  default     = {}
+  description = "A map of subnet name to delegation block on the subnet"
+}
+
+variable "subnet_private_endpoint_network_policies_enabled" {
+  type        = map(string)
+  default     = {}
+  description = "A map of subnet name to enable/disable private link service network policies on the subnet."
+}
+
+variable "subnet_names" {
+  type        = list(string)
+  description = "A list of public subnets inside the vNet."
+}
+
+variable "subnet_prefixes" {
+  type        = list(string)
+  description = "The address prefix to use for the subnet."
+}
+
+variable "subnet_service_endpoints" {
+  type        = map(any)
+  default     = {}
+  description = "A map of subnet name to service endpoints to add to the subnet."
 }
 
 ################################################

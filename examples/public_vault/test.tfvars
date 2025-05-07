@@ -6,17 +6,43 @@ sku_name                        = "standard"
 access_policies                 = {}
 enable_rbac_authorization       = true
 role_assignment_type            = "User"
-network_acls = {
-  bypass                     = "AzureServices"
-  default_action             = "Allow"
-  ip_rules                   = []
-  virtual_network_subnet_ids = []
+public_network_access_enabled   = true
+secrets = {
+  "example-secret-1" = "secret_value_1"
+  "example-secret-2" = "secret_value_2"
 }
-public_network_access_enabled = false
+certificate_issuers = {
+  "example-digicert-tls-issuer" = {
+    provider_name = "DigiCert"
+    org_id        = "000000"
+    account_id    = "12345"
+    password      = "password12345" // pragma: allowlist secret
+    admins = [
+      {
+        email_address = "terratest@launchdso.nttdata.com"
+        first_name    = "Terratest"
+      }
+    ]
+  }
+}
+generated_certificates = {
+  "example-self-signed-certificate" = {
+    issuer_name = "Self"
 
+    x509_certificate_properties = {
+      key_usage          = ["digitalSignature", "nonRepudiation", "keyCertSign", "keyEncipherment", "dataEncipherment"]
+      subject            = "CN=Launch DSO Test Certificate"
+      validity_in_months = 12
+      subject_alternate_names = {
+        emails    = ["test@launchdso.nttdata.com"]
+        dns_names = ["launchdso.nttdata.com"]
+      }
+    }
+  }
+}
 environment                 = "sandbox"
 environment_number          = "000"
-resource_number             = "000"
+resource_number             = "001"
 logical_product_family      = "launch"
 logical_product_service     = "vault"
 use_azure_region_abbr       = true

@@ -55,7 +55,6 @@ module "key_vault" {
   access_policies = var.access_policies
   custom_tags     = local.key_vault_tags
   certificates    = var.certificates
-  secrets         = var.secrets
 
   depends_on = [module.resource_group]
 }
@@ -72,6 +71,77 @@ module "role_assignment" {
   principal_type       = each.value.principal_type
 
   depends_on = [module.key_vault]
+}
+
+module "secrets" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_secret/azurerm"
+  version = "~> 1.0"
+
+  for_each = var.secrets
+
+  key_vault_id = module.key_vault.key_vault_id
+  name         = each.key
+  value        = each.value
+
+  depends_on = [module.role_assignment]
+}
+
+module "imported_certificates" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate/azurerm"
+  version = "~> 1.0"
+
+  for_each = var.certificates
+
+  name         = each.key
+  key_vault_id = module.key_vault.key_vault_id
+
+  method = "Import"
+
+  certificate = {
+    contents = each.value.filepath != null ? filebase64("${path.root}/${each.value.filepath}") : each.value.contents
+    password = each.value.password
+  }
+
+  depends_on = [module.role_assignment]
+}
+
+module "certificate_issuers" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate_issuer/azurerm"
+  version = "~> 1.0"
+
+  for_each = var.certificate_issuers
+
+  name         = each.key
+  key_vault_id = module.key_vault.key_vault_id
+
+  provider_name = each.value.provider_name
+  org_id        = each.value.org_id
+  account_id    = each.value.account_id
+  password      = each.value.password
+
+  admins = each.value.admins
+
+  depends_on = [module.role_assignment]
+}
+
+module "generated_certificates" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate/azurerm"
+  version = "~> 1.0"
+
+  for_each = var.generated_certificates
+
+  method = "Generate"
+
+  name         = each.key
+  key_vault_id = module.key_vault.key_vault_id
+
+  issuer_name                 = each.value.issuer_name
+  key_properties              = each.value.key_properties
+  lifetime_action             = each.value.lifetime_action
+  secret_properties           = each.value.secret_properties
+  x509_certificate_properties = each.value.x509_certificate_properties
+
+  depends_on = [module.role_assignment]
 }
 
 module "private_endpoint" {
@@ -93,5 +163,5 @@ module "private_endpoint" {
   tags                            = local.private_endpoint_tags
   private_service_connection_name = local.private_service_connection_name
 
-  depends_on = [module.resource_group]
+  depends_on = [module.key_vault]
 }
