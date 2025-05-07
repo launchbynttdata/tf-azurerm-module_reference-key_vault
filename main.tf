@@ -54,7 +54,6 @@ module "key_vault" {
   network_acls    = var.network_acls
   access_policies = var.access_policies
   custom_tags     = local.key_vault_tags
-  certificates    = var.certificates
 
   depends_on = [module.resource_group]
 }
