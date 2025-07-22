@@ -9,12 +9,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-locals {
-  role_assignments = merge({
-    current_user = {
-      role_definition_name = "Key Vault Administrator"
-      principal_id         = data.azurerm_client_config.current.object_id
-      principal_type       = var.role_assignment_type
+
+terraform {
+  required_version = "~> 1.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.77"
     }
-  }, var.role_assignments)
+  }
 }

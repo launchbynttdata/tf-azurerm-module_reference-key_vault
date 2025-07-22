@@ -107,6 +107,67 @@ variable "certificates" {
   default = {}
 }
 
+variable "certificate_issuers" {
+  description = "List of certificate issuers to be created"
+  type = map(object({
+    provider_name = string
+    org_id        = string
+    account_id    = string
+    password      = string
+
+    admins = optional(list(object({
+      email_address = string
+      first_name    = optional(string)
+      last_name     = optional(string)
+      phone         = optional(string)
+    })))
+  }))
+  default = {}
+}
+
+variable "generated_certificates" {
+  description = "List of certificates to be generated using an issuer."
+  type = map(object({
+    issuer_name = string
+
+    key_properties = optional(object({
+      exportable = bool
+      reuse_key  = bool
+      key_type   = string
+
+      key_size = optional(number, 2048)
+      curve    = optional(string, "P-256")
+    }))
+
+    lifetime_action = optional(object({
+      action = object({
+        action_type = string
+      })
+      trigger = object({
+        lifetime_percentage = optional(number)
+        days_before_expiry  = optional(number)
+      })
+    }))
+
+    secret_properties = optional(object({
+      content_type = string
+    }))
+
+    x509_certificate_properties = optional(object({
+      key_usage          = list(string)
+      extended_key_usage = optional(list(string))
+      subject            = string
+      validity_in_months = number
+      subject_alternative_names = optional(object({
+        dns_names = optional(list(string))
+        emails    = optional(list(string))
+        upns      = optional(list(string))
+      }))
+    }))
+  }))
+  default = {}
+}
+
 variable "secrets" {
   description = "List of secrets (name and value)"
   type        = map(string)

@@ -12,7 +12,7 @@
 
 module "resource_names" {
   source  = "terraform.registry.launch.nttdata.com/module_library/resource_name/launch"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   for_each = var.resource_names_map
 
@@ -54,8 +54,6 @@ module "key_vault" {
   network_acls    = var.network_acls
   access_policies = var.access_policies
   custom_tags     = local.key_vault_tags
-  certificates    = var.certificates
-  secrets         = var.secrets
 
   depends_on = [module.resource_group]
 }
@@ -69,56 +67,80 @@ module "role_assignment" {
   scope                = module.key_vault.key_vault_id
   role_definition_name = each.value.role_definition_name
   principal_id         = each.value.principal_id
+  principal_type       = each.value.principal_type
 
   depends_on = [module.key_vault]
 }
 
-module "private_dns_zone" {
-  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_zone/azurerm"
+module "secrets" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_secret/azurerm"
   version = "~> 1.0"
 
-  count = var.public_network_access_enabled ? 0 : 1
+  for_each = var.secrets
 
-  resource_group_name = local.resource_group_name
-  zone_name           = var.zone_name
-  soa_record          = var.soa_record
-  tags                = local.private_dns_zone_tags
+  key_vault_id = module.key_vault.key_vault_id
+  name         = each.key
+  value        = each.value
 
-  depends_on = [module.resource_group]
+  depends_on = [module.role_assignment]
 }
 
-module "private_dns_zone_link_vnet" {
-  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_vnet_link/azurerm"
+module "imported_certificates" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate/azurerm"
   version = "~> 1.0"
 
-  count = var.public_network_access_enabled ? 0 : 1
+  for_each = var.certificates
 
-  link_name             = "private_endpoint_vnet_link"
-  resource_group_name   = local.resource_group_name
-  private_dns_zone_name = module.private_dns_zone[0].zone_name
-  virtual_network_id    = local.vnet_id
-  registration_enabled  = false
-  tags                  = merge({ resource_name = "private_endpoint_vnet_link" }, local.default_tags, var.tags)
+  name         = each.key
+  key_vault_id = module.key_vault.key_vault_id
 
-  depends_on = [module.resource_group]
+  method = "Import"
 
+  certificate = {
+    contents = each.value.filepath != null ? filebase64("${path.root}/${each.value.filepath}") : each.value.contents
+    password = each.value.password
+  }
+
+  depends_on = [module.role_assignment]
 }
 
-module "additional_vnet_links" {
-  source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_vnet_link/azurerm"
+module "certificate_issuers" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate_issuer/azurerm"
   version = "~> 1.0"
 
-  for_each = var.public_network_access_enabled ? {} : var.additional_vnet_links
+  for_each = var.certificate_issuers
 
-  link_name             = each.key
-  resource_group_name   = local.resource_group_name
-  private_dns_zone_name = module.private_dns_zone[0].zone_name
-  virtual_network_id    = each.value
-  registration_enabled  = false
-  tags                  = merge({ resource_name = each.key }, local.default_tags, var.tags)
+  name         = each.key
+  key_vault_id = module.key_vault.key_vault_id
 
-  depends_on = [module.resource_group]
+  provider_name = each.value.provider_name
+  org_id        = each.value.org_id
+  account_id    = each.value.account_id
+  password      = each.value.password
 
+  admins = each.value.admins
+
+  depends_on = [module.role_assignment]
+}
+
+module "generated_certificates" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate/azurerm"
+  version = "~> 1.0"
+
+  for_each = var.generated_certificates
+
+  method = "Generate"
+
+  name         = each.key
+  key_vault_id = module.key_vault.key_vault_id
+
+  issuer_name                 = each.value.issuer_name
+  key_properties              = each.value.key_properties
+  lifetime_action             = each.value.lifetime_action
+  secret_properties           = each.value.secret_properties
+  x509_certificate_properties = each.value.x509_certificate_properties
+
+  depends_on = [module.certificate_issuers]
 }
 
 module "private_endpoint" {
@@ -132,7 +154,7 @@ module "private_endpoint" {
   region                          = var.location
   subnet_id                       = var.subnet_id
   private_dns_zone_group_name     = var.private_dns_zone_group_name
-  private_dns_zone_ids            = [module.private_dns_zone[0].id]
+  private_dns_zone_ids            = var.private_dns_zone_ids
   is_manual_connection            = var.is_manual_connection
   private_connection_resource_id  = module.key_vault.key_vault_id
   subresource_names               = var.subresource_names
@@ -140,5 +162,5 @@ module "private_endpoint" {
   tags                            = local.private_endpoint_tags
   private_service_connection_name = local.private_service_connection_name
 
-  depends_on = [module.resource_group]
+  depends_on = [module.key_vault]
 }

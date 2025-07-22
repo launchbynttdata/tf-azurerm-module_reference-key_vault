@@ -40,11 +40,6 @@ output "key_vault_name" {
   value       = module.key_vault.key_vault_name
 }
 
-output "private_dns_zone_id" {
-  description = "ID of the Private DNS Zone"
-  value       = try(module.private_dns_zone[0].id, "")
-}
-
 output "private_endpoint_id" {
   description = "ID of the Private Endpoint"
   value       = try(module.private_endpoint[0].id, "")

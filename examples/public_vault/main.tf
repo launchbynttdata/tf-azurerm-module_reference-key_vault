@@ -106,6 +106,9 @@ module "key_vault" {
   certificates                = var.certificates
   secrets                     = var.secrets
 
+  certificate_issuers    = var.certificate_issuers
+  generated_certificates = var.generated_certificates
+
   tags = merge(var.tags, { resource_name = module.resource_names["key_vault"].standard })
 
   depends_on = [module.network, module.private_dns_zone]

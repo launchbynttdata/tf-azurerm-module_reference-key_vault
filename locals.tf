@@ -22,15 +22,10 @@ locals {
 
   key_vault_tags        = merge({ resource_name = local.key_vault_name }, local.default_tags, var.tags)
   resource_group_tags   = merge({ resource_name = local.resource_group_name }, local.default_tags, var.tags)
-  private_dns_zone_tags = merge({ resource_name = var.zone_name }, local.default_tags, var.tags)
   private_endpoint_tags = merge({ resource_name = local.endpoint_name }, local.default_tags, var.tags)
 
   resource_group = {
     name     = local.resource_group_name
     location = var.location
   }
-
-  # Extract the vnet_id from subnet_id
-  vnet_id = var.subnet_id != null ? join("/", slice(split("/", var.subnet_id), 0, 9)) : null
-
 }

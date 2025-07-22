@@ -116,7 +116,75 @@ variable "certificates" {
   type = map(object({
     contents = optional(string)
     filepath = optional(string)
-    password = string
+    password = optional(string)
+  }))
+  default = {}
+}
+
+variable "certificate_issuers" {
+  description = "List of certificate issuers to be created"
+  type = map(object({
+    provider_name = string
+    org_id        = string
+    account_id    = string
+    password      = string
+
+    admins = optional(list(object({
+      email_address = string
+      first_name    = optional(string)
+      last_name     = optional(string)
+      phone         = optional(string)
+    })), [])
+  }))
+  default = {}
+}
+
+variable "generated_certificates" {
+  description = "List of certificates to be generated using an issuer."
+  type = map(object({
+    issuer_name = string
+
+    key_properties = optional(object({
+      exportable = bool
+      reuse_key  = bool
+      key_type   = string
+
+      key_size = optional(number)
+      curve    = optional(string)
+      }), {
+      exportable = true
+      key_type   = "RSA"
+      key_size   = 2048
+      reuse_key  = false
+    })
+
+    lifetime_action = optional(object({
+      action = object({
+        action_type = string
+      })
+      trigger = object({
+        lifetime_percentage = optional(number)
+        days_before_expiry  = optional(number)
+      })
+    }))
+
+    secret_properties = optional(object({
+      content_type = string
+      }), {
+      content_type = "application/x-pkcs12"
+    })
+
+    x509_certificate_properties = optional(object({
+      key_usage          = list(string)
+      extended_key_usage = optional(list(string))
+      subject            = string
+      validity_in_months = number
+      subject_alternative_names = optional(object({
+        dns_names = optional(list(string))
+        emails    = optional(list(string))
+        upns      = optional(list(string))
+      }))
+    }))
   }))
   default = {}
 }
@@ -212,49 +280,13 @@ variable "use_azure_region_abbr" {
 #########################################
 
 variable "role_assignments" {
-  description = "A map of role assignments to be created. Required only when enable_rbac_authorization is set to true."
+  description = "A map of role assignments to be created"
   type = map(object({
     role_definition_name = string
     principal_id         = string
+    principal_type       = string
   }))
   default = {}
-}
-
-###########################################
-# Variables related to private DNS zone
-###########################################
-
-variable "zone_name" {
-  type        = string
-  description = "Name of the private dns zone. For public cloud, the default value is `privatelink.vaultcore.azure.net` and for sovereign clouds, the default value is `privatelink.vaultcore.usgovcloudapi.net`"
-  default     = "privatelink.vaultcore.azure.net"
-  validation {
-    condition     = contains(["privatelink.vaultcore.azure.net", "privatelink.vaultcore.usgovcloudapi.net"], var.zone_name)
-    error_message = "The zone_name must be either 'privatelink.vaultcore.azure.net' or 'privatelink.vaultcore.usgovcloudapi.net'."
-  }
-}
-
-variable "soa_record" {
-  type = object({
-    email        = string
-    expire_time  = number
-    minimum_ttl  = number
-    refresh_time = number
-    retry_time   = number
-    ttl          = number
-    tags         = map(string)
-  })
-  default = null
-}
-
-################################################
-# Variables related to private DNS zone link
-################################################
-
-variable "additional_vnet_links" {
-  description = "The list of Virtual Network ids that should be linked to the DNS Zone. Changing this forces a new resource to be created."
-  type        = map(string)
-  default     = {}
 }
 
 ################################################
@@ -268,6 +300,12 @@ variable "subnet_id" {
   EOT
   type        = string
   default     = null
+}
+
+variable "private_dns_zone_ids" {
+  description = "A list of Private DNS Zone IDs to link with the Private Endpoint."
+  type        = list(string)
+  default     = []
 }
 
 variable "private_dns_zone_group_name" {
