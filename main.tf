@@ -164,3 +164,104 @@ module "private_endpoint" {
 
   depends_on = [module.key_vault]
 }
+
+
+# Monitor Action Group
+module "monitor_action_group" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/monitor_action_group/azurerm"
+  version = "~> 1.0.0"
+
+  count               = var.action_group != null ? 1 : 0
+  action_group_name   = var.action_group.name
+  resource_group_name = local.resource_group_name
+  short_name          = var.action_group.short_name
+  arm_role_receivers  = var.action_group.arm_role_receivers
+  email_receivers     = var.action_group.email_receivers
+  tags                = local.resource_group_tags
+
+  depends_on = [module.key_vault]
+}
+
+
+# Monitor Metric Alerts (for Key Vault)
+module "monitor_metric_alert" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/monitor_metric_alert/azurerm"
+  version = "~> 2.0"
+
+  for_each            = var.metric_alerts
+  name                = each.key
+  resource_group_name = local.resource_group_name
+
+  scopes = [
+    module.key_vault.key_vault_id
+  ]
+
+  description        = each.value.description
+  frequency          = each.value.frequency
+  severity           = each.value.severity
+  enabled            = each.value.enabled
+  webhook_properties = each.value.webhook_properties
+  criteria           = each.value.criteria
+  dynamic_criteria   = each.value.dynamic_criteria
+
+  action_group_ids = concat(
+    var.action_group != null ? [module.monitor_action_group[0].action_group_id] : [],
+    var.action_group_ids
+  )
+
+  depends_on = [
+    module.key_vault,
+    module.monitor_action_group
+  ]
+}
+
+
+# Log Analytics Workspace
+
+module "log_analytics_workspace" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/log_analytics_workspace/azurerm"
+  version = "~> 1.0"
+
+  count = var.log_analytics_workspace != null ? 1 : 0
+
+  name                = module.resource_names["log_analytics_workspace"].standard
+  location            = var.location
+  resource_group_name = local.resource_group_name
+
+  sku                           = var.log_analytics_workspace.sku
+  retention_in_days             = var.log_analytics_workspace.retention_in_days
+  identity                      = var.log_analytics_workspace.identity
+  local_authentication_disabled = var.log_analytics_workspace.local_authentication_disabled
+
+  tags = merge(
+    local.resource_group_tags,
+    { resource_name = module.resource_names["log_analytics_workspace"].standard }
+  )
+
+  depends_on = [module.key_vault]
+}
+
+
+# Diagnostic Settings for Key Vault
+module "diagnostic_setting" {
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/monitor_diagnostic_setting/azurerm"
+  version = "~> 3.0"
+
+  for_each = var.diagnostic_settings
+
+  name               = each.key
+  target_resource_id = module.key_vault.key_vault_id
+
+  log_analytics_workspace_id = coalesce(
+    var.log_analytics_workspace != null ? module.log_analytics_workspace[0].id : null,
+    var.log_analytics_workspace_id
+  )
+
+  enabled_log = each.value.enabled_log
+  metrics     = each.value.metrics
+
+  depends_on = [
+    module.key_vault,
+    module.log_analytics_workspace
+  ]
+}

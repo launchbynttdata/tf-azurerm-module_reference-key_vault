@@ -45,3 +45,65 @@ subnet_private_endpoint_network_policies_enabled = {
 tags = {
   Purpose = "Terraform Examples"
 }
+
+# Action Group
+
+action_group = {
+  name       = "kv-example-ag"
+  short_name = "kvexag"
+
+  email_receivers = [
+    {
+      name          = "admin"
+      email_address = "your-email@domain.com"
+    }
+  ]
+}
+
+
+# Metric Alerts
+
+metric_alerts = {
+  kv_availability_alert = {
+    description = "Alert when Key Vault availability drops"
+    severity    = 3
+    enabled     = true
+    frequency   = "PT1M"
+
+    criteria = [
+      {
+        metric_namespace = "Microsoft.KeyVault/vaults"
+        metric_name      = "Availability"
+        aggregation      = "Average"
+        operator         = "LessThan"
+        threshold        = 99
+      }
+    ]
+  }
+}
+
+
+# Log Analytics Workspace
+log_analytics_workspace = {
+  sku               = "PerGB2018"
+  retention_in_days = 30
+  daily_quota_gb    = 1
+}
+
+# Diagnostic Settings
+diagnostic_settings = {
+  kv_diagnostics = {
+    enabled_log = [
+      {
+        category_group = "allLogs"
+      }
+    ]
+
+    metrics = [
+      {
+        category = "AllMetrics"
+        enabled  = true
+      }
+    ]
+  }
+}
