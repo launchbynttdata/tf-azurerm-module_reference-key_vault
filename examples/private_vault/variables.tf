@@ -152,6 +152,15 @@ variable "resource_names_map" {
       name       = "pdzl"
       max_length = 80
     }
+    log_analytics_workspace = {
+      name       = "law"
+      max_length = 80
+    }
+
+    diagnostic_setting = {
+      name       = "ds"
+      max_length = 80
+    }
   }
 }
 
@@ -364,4 +373,34 @@ variable "tags" {
   description = "A map of tags to be associated with the resources"
   type        = map(string)
   default     = {}
+}
+
+variable "action_group" {
+  type    = any
+  default = null
+}
+
+variable "action_group_ids" {
+  type    = list(string)
+  default = []
+}
+
+variable "metric_alerts" {
+  type    = any
+  default = {}
+}
+
+variable "log_analytics_workspace" {
+  type    = any
+  default = null
+}
+
+variable "log_analytics_workspace_id" {
+  type    = string
+  default = null
+}
+
+variable "diagnostic_settings" {
+  type    = any
+  default = {}
 }

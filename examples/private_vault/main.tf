@@ -105,6 +105,12 @@ module "key_vault" {
   request_message             = var.request_message
   certificates                = var.certificates
   secrets                     = var.secrets
+  action_group                = var.action_group
+  action_group_ids            = var.action_group_ids
+  metric_alerts               = var.metric_alerts
+  log_analytics_workspace     = var.log_analytics_workspace
+  log_analytics_workspace_id  = var.log_analytics_workspace_id
+  diagnostic_settings         = var.diagnostic_settings
 
   tags = merge(var.tags, { resource_name = module.resource_names["key_vault"].standard })
 
