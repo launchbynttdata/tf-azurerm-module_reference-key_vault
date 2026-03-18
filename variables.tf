@@ -458,6 +458,37 @@ variable "metric_alerts" {
 }
 
 ############################################################
+# Monitor Scheduled Query Alert Properties
+############################################################
+
+variable "scheduled_query_alerts" {
+  type = map(object({
+    data_source_id          = optional(string)
+    description             = optional(string, "")
+    enabled                 = optional(bool, true)
+    query                   = string
+    severity                = optional(number, 1)
+    frequency               = optional(number, 5)
+    time_window             = optional(number, 30)
+    authorized_resource_ids = optional(list(string), [])
+    trigger_operator        = optional(string, "GreaterThan")
+    trigger_threshold       = optional(number, 0)
+    action_group_ids        = optional(list(string), [])
+    email_subject           = optional(string, "Alert Notification")
+    custom_webhook_payload  = optional(string, "{}")
+  }))
+
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for alert in values(var.scheduled_query_alerts) : can(jsondecode(alert.custom_webhook_payload))
+    ])
+    error_message = "Each scheduled query alert custom_webhook_payload must be a valid JSON string."
+  }
+}
+
+############################################################
 # Diagnostic Settings Properties
 ############################################################
 

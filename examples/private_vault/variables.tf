@@ -292,12 +292,6 @@ variable "request_message" {
 # Variables related to virtual network
 ########################################
 
-variable "use_for_each" {
-  type        = bool
-  description = "Use `for_each` instead of `count` to create multiple resource instances."
-  nullable    = false
-}
-
 variable "address_space" {
   type        = list(string)
   description = "The address space that is used by the virtual network."
@@ -386,6 +380,11 @@ variable "action_group_ids" {
 }
 
 variable "metric_alerts" {
+  type    = any
+  default = {}
+}
+
+variable "scheduled_query_alerts" {
   type    = any
   default = {}
 }

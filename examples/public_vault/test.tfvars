@@ -63,11 +63,67 @@ nsg_ids                  = {}
 route_tables_ids         = {}
 subnet_delegation        = {}
 subnet_service_endpoints = {}
-use_for_each             = true
 subnet_private_endpoint_network_policies_enabled = {
   private-endpoint-sbnt = false
 }
 
 tags = {
   Purpose = "Terraform Examples"
+}
+
+action_group = {
+  name       = "kv-public-example-ag"
+  short_name = "kvpubag"
+
+  email_receivers = [
+    {
+      name          = "admin"
+      email_address = "your-email@domain.com"
+    }
+  ]
+}
+
+scheduled_query_alerts = {
+  kv_secret_operation_failures = {
+    description            = "Alert when Key Vault secret operations fail"
+    severity               = 2
+    enabled                = true
+    frequency              = 5
+    time_window            = 30
+    trigger_operator       = "GreaterThan"
+    trigger_threshold      = 0
+    email_subject          = "Key Vault secret operation failures detected"
+    custom_webhook_payload = "{\"alertType\":\"scheduled-query\",\"service\":\"key-vault\"}"
+    query                  = <<-QUERY
+      AzureDiagnostics
+      | where ResourceProvider == "MICROSOFT.KEYVAULT"
+      | where Category == "AuditEvent"
+      | where OperationName has "Secret"
+      | where ResultType != "Success"
+      | summarize FailureCount = count() by bin(TimeGenerated, 5m)
+    QUERY
+  }
+}
+
+log_analytics_workspace = {
+  sku               = "PerGB2018"
+  retention_in_days = 30
+  daily_quota_gb    = 1
+}
+
+diagnostic_settings = {
+  kv_diagnostics = {
+    enabled_log = [
+      {
+        category_group = "allLogs"
+      }
+    ]
+
+    metrics = [
+      {
+        category = "AllMetrics"
+        enabled  = true
+      }
+    ]
+  }
 }

@@ -214,6 +214,46 @@ module "monitor_metric_alert" {
     module.monitor_action_group
   ]
 }
+module "monitor_scheduled_query_alert" {
+  source = "git::ssh://git@github.com/launchbynttdata/tf-azurerm-module_primitive-monitor_scheduled_query_alert.git?ref=51375551f5f814b0ac2b173e80eb1baf85352c43"
+
+  for_each = var.scheduled_query_alerts
+
+  resource_group_name = local.resource_group_name
+  location            = var.location
+  alert_name          = each.key
+
+  data_source_id = coalesce(
+    each.value.data_source_id,
+    var.log_analytics_workspace != null ? module.log_analytics_workspace[0].id : null,
+    var.log_analytics_workspace_id
+  )
+
+  description             = each.value.description
+  enabled                 = each.value.enabled
+  query                   = each.value.query
+  severity                = each.value.severity
+  frequency               = each.value.frequency
+  time_window             = each.value.time_window
+  authorized_resource_ids = each.value.authorized_resource_ids
+  trigger_operator        = each.value.trigger_operator
+  trigger_threshold       = each.value.trigger_threshold
+  email_subject           = each.value.email_subject
+  custom_webhook_payload  = each.value.custom_webhook_payload
+
+  action_group_ids = concat(
+    var.action_group != null ? [module.monitor_action_group[0].action_group_id] : [],
+    var.action_group_ids,
+    each.value.action_group_ids
+  )
+
+  depends_on = [
+    module.key_vault,
+    module.monitor_action_group,
+    module.log_analytics_workspace,
+    module.diagnostic_setting
+  ]
+}
 
 
 # Log Analytics Workspace

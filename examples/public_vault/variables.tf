@@ -213,6 +213,14 @@ variable "resource_names_map" {
       name       = "pdzl"
       max_length = 80
     }
+    log_analytics_workspace = {
+      name       = "law"
+      max_length = 80
+    }
+    diagnostic_setting = {
+      name       = "ds"
+      max_length = 80
+    }
   }
 }
 
@@ -344,12 +352,6 @@ variable "request_message" {
 # Variables related to virtual network
 ########################################
 
-variable "use_for_each" {
-  type        = bool
-  description = "Use `for_each` instead of `count` to create multiple resource instances."
-  nullable    = false
-}
-
 variable "address_space" {
   type        = list(string)
   description = "The address space that is used by the virtual network."
@@ -425,4 +427,39 @@ variable "tags" {
   description = "A map of tags to be associated with the resources"
   type        = map(string)
   default     = {}
+}
+
+variable "action_group" {
+  type    = any
+  default = null
+}
+
+variable "action_group_ids" {
+  type    = list(string)
+  default = []
+}
+
+variable "metric_alerts" {
+  type    = any
+  default = {}
+}
+
+variable "scheduled_query_alerts" {
+  type    = any
+  default = {}
+}
+
+variable "log_analytics_workspace" {
+  type    = any
+  default = null
+}
+
+variable "log_analytics_workspace_id" {
+  type    = string
+  default = null
+}
+
+variable "diagnostic_settings" {
+  type    = any
+  default = {}
 }
