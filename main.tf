@@ -60,7 +60,7 @@ module "key_vault" {
 
 module "role_assignment" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/role_assignment/azurerm"
-  version = "~> 1.0"
+  version = "~> 1.2.1"
 
   for_each = var.role_assignments
 

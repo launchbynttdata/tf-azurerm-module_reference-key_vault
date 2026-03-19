@@ -126,7 +126,7 @@ No providers.
 | <a name="module_resource_names"></a> [resource\_names](#module\_resource\_names) | terraform.registry.launch.nttdata.com/module_library/resource_name/launch | ~> 2.0 |
 | <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group) | terraform.registry.launch.nttdata.com/module_primitive/resource_group/azurerm | ~> 1.0 |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | terraform.registry.launch.nttdata.com/module_primitive/key_vault/azurerm | ~> 2.0 |
-| <a name="module_role_assignment"></a> [role\_assignment](#module\_role\_assignment) | terraform.registry.launch.nttdata.com/module_primitive/role_assignment/azurerm | ~> 1.0 |
+| <a name="module_role_assignment"></a> [role\_assignment](#module\_role\_assignment) | terraform.registry.launch.nttdata.com/module_primitive/role_assignment/azurerm | ~> 1.2.1 |
 | <a name="module_secrets"></a> [secrets](#module\_secrets) | terraform.registry.launch.nttdata.com/module_primitive/key_vault_secret/azurerm | ~> 1.0 |
 | <a name="module_imported_certificates"></a> [imported\_certificates](#module\_imported\_certificates) | terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate/azurerm | ~> 1.0 |
 | <a name="module_certificate_issuers"></a> [certificate\_issuers](#module\_certificate\_issuers) | terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate_issuer/azurerm | ~> 1.0 |
