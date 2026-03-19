@@ -215,7 +215,8 @@ module "monitor_metric_alert" {
   ]
 }
 module "monitor_scheduled_query_alert" {
-  source = "git::ssh://git@github.com/launchbynttdata/tf-azurerm-module_primitive-monitor_scheduled_query_alert.git?ref=51375551f5f814b0ac2b173e80eb1baf85352c43"
+  source  = "terraform.registry.launch.nttdata.com/module_primitive/monitor_scheduled_query_alert/azurerm"
+  version = "~> 1.0"
 
   for_each = var.scheduled_query_alerts
 

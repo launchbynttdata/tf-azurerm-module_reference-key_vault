@@ -134,7 +134,7 @@ No providers.
 | <a name="module_private_endpoint"></a> [private\_endpoint](#module\_private\_endpoint) | terraform.registry.launch.nttdata.com/module_primitive/private_endpoint/azurerm | ~> 1.0 |
 | <a name="module_monitor_action_group"></a> [monitor\_action\_group](#module\_monitor\_action\_group) | terraform.registry.launch.nttdata.com/module_primitive/monitor_action_group/azurerm | ~> 1.0.0 |
 | <a name="module_monitor_metric_alert"></a> [monitor\_metric\_alert](#module\_monitor\_metric\_alert) | terraform.registry.launch.nttdata.com/module_primitive/monitor_metric_alert/azurerm | ~> 2.0 |
-| <a name="module_monitor_scheduled_query_alert"></a> [monitor\_scheduled\_query\_alert](#module\_monitor\_scheduled\_query\_alert) | git::ssh://git@github.com/launchbynttdata/tf-azurerm-module_primitive-monitor_scheduled_query_alert.git | 51375551f5f814b0ac2b173e80eb1baf85352c43 |
+| <a name="module_monitor_scheduled_query_alert"></a> [monitor\_scheduled\_query\_alert](#module\_monitor\_scheduled\_query\_alert) | terraform.registry.launch.nttdata.com/module_primitive/monitor_scheduled_query_alert/azurerm | ~> 1.0 |
 | <a name="module_log_analytics_workspace"></a> [log\_analytics\_workspace](#module\_log\_analytics\_workspace) | terraform.registry.launch.nttdata.com/module_primitive/log_analytics_workspace/azurerm | ~> 1.0 |
 | <a name="module_diagnostic_setting"></a> [diagnostic\_setting](#module\_diagnostic\_setting) | terraform.registry.launch.nttdata.com/module_primitive/monitor_diagnostic_setting/azurerm | ~> 3.0 |
 
