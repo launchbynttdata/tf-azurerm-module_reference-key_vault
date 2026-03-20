@@ -46,7 +46,7 @@ resource_number             = "001"
 logical_product_family      = "launch"
 logical_product_service     = "vault"
 use_azure_region_abbr       = true
-location                    = "eastus"
+location                    = "northeurope"
 role_assignments            = {}
 private_dns_zone_group_name = "vault"
 is_manual_connection        = false
@@ -105,11 +105,7 @@ scheduled_query_alerts = {
   }
 }
 
-log_analytics_workspace = {
-  sku               = "PerGB2018"
-  retention_in_days = 30
-  daily_quota_gb    = 1
-}
+log_analytics_workspace_id = "/subscriptions/8fad0848-88a3-4620-bee0-1e65e1206c73/resourceGroups/hygtmp-loganalytics-neu-sbox-001-rg-001/providers/Microsoft.OperationalInsights/workspaces/hygtmp-loganalytics-neu-sbox-001-law-001"
 
 diagnostic_settings = {
   kv_diagnostics = {
