@@ -226,7 +226,7 @@ module "monitor_scheduled_query_alert" {
 
   data_source_id = coalesce(
     each.value.data_source_id,
-    var.log_analytics_workspace != null ? module.log_analytics_workspace[0].id : null,
+    try(module.log_analytics_workspace[0].id, null),
     var.log_analytics_workspace_id
   )
 
@@ -294,7 +294,7 @@ module "diagnostic_setting" {
   target_resource_id = module.key_vault.key_vault_id
 
   log_analytics_workspace_id = coalesce(
-    var.log_analytics_workspace != null ? module.log_analytics_workspace[0].id : null,
+    try(module.log_analytics_workspace[0].id, null),
     var.log_analytics_workspace_id
   )
 
