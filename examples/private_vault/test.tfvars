@@ -103,9 +103,12 @@ scheduled_query_alerts = {
   }
 }
 
-
 # Log Analytics Workspace
-log_analytics_workspace_id = "/subscriptions/8fad0848-88a3-4620-bee0-1e65e1206c73/resourceGroups/hygtmp-loganalytics-neu-sbox-001-rg-001/providers/Microsoft.OperationalInsights/workspaces/hygtmp-loganalytics-neu-sbox-001-law-001"
+log_analytics_workspace = {
+  sku               = "PerGB2018"
+  retention_in_days = 30
+  daily_quota_gb    = -1
+}
 
 # Diagnostic Settings
 diagnostic_settings = {
