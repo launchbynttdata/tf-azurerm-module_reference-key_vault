@@ -5,10 +5,8 @@ purge_protection_enabled        = false
 sku_name                        = "standard"
 access_policies                 = {}
 enable_rbac_authorization       = true
-# Use ServicePrincipal for CI/CD identities (for example GitHub Actions).
-# For local runs with a signed-in user, you may temporarily set this to "User".
-role_assignment_type          = "ServicePrincipal"
-public_network_access_enabled = true
+role_assignment_type            = "User"
+public_network_access_enabled   = true
 secrets = {
   "example-secret-1" = "secret_value_1"
   "example-secret-2" = "secret_value_2"
@@ -48,7 +46,7 @@ resource_number             = "001"
 logical_product_family      = "launch"
 logical_product_service     = "vault"
 use_azure_region_abbr       = true
-location                    = "northeurope"
+location                    = "eastus"
 role_assignments            = {}
 private_dns_zone_group_name = "vault"
 is_manual_connection        = false

@@ -5,9 +5,7 @@ purge_protection_enabled        = false
 sku_name                        = "standard"
 access_policies                 = {}
 enable_rbac_authorization       = true
-# Use ServicePrincipal for CI/CD identities (for example GitHub Actions).
-# For local runs with a signed-in user, you may temporarily set this to "User".
-role_assignment_type = "ServicePrincipal"
+role_assignment_type            = "User"
 network_acls = {
   bypass                     = "AzureServices"
   default_action             = "Allow"
@@ -22,7 +20,7 @@ resource_number             = "000"
 logical_product_family      = "launch"
 logical_product_service     = "vault"
 use_azure_region_abbr       = true
-location                    = "northeurope"
+location                    = "eastus"
 role_assignments            = {}
 private_dns_zone_group_name = "vault"
 is_manual_connection        = false
@@ -109,7 +107,7 @@ scheduled_query_alerts = {
 log_analytics_workspace = {
   sku               = "PerGB2018"
   retention_in_days = 30
-  daily_quota_gb    = -1
+  daily_quota_gb    = 1
 }
 
 # Diagnostic Settings
