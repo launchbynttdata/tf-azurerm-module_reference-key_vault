@@ -5,8 +5,10 @@ purge_protection_enabled        = false
 sku_name                        = "standard"
 access_policies                 = {}
 enable_rbac_authorization       = true
-role_assignment_type            = "User"
-public_network_access_enabled   = true
+# Use ServicePrincipal for CI/CD identities (for example GitHub Actions).
+# For local runs with a signed-in user, you may temporarily set this to "User".
+role_assignment_type          = "ServicePrincipal"
+public_network_access_enabled = true
 secrets = {
   "example-secret-1" = "secret_value_1"
   "example-secret-2" = "secret_value_2"

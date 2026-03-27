@@ -5,7 +5,9 @@ purge_protection_enabled        = false
 sku_name                        = "standard"
 access_policies                 = {}
 enable_rbac_authorization       = true
-role_assignment_type            = "User"
+# Use ServicePrincipal for CI/CD identities (for example GitHub Actions).
+# For local runs with a signed-in user, you may temporarily set this to "User".
+role_assignment_type = "ServicePrincipal"
 network_acls = {
   bypass                     = "AzureServices"
   default_action             = "Allow"
