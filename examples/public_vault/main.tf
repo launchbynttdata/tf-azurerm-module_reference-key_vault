@@ -14,7 +14,7 @@ data "azurerm_client_config" "current" {}
 
 module "resource_names" {
   source  = "terraform.registry.launch.nttdata.com/module_library/resource_name/launch"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   for_each = var.resource_names_map
 
@@ -40,24 +40,36 @@ module "resource_group" {
 
 module "network" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/virtual_network/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
-  use_for_each                                     = var.use_for_each
-  vnet_location                                    = var.location
-  address_space                                    = var.address_space
-  bgp_community                                    = var.bgp_community
-  ddos_protection_plan                             = var.ddos_protection_plan
-  dns_servers                                      = var.dns_servers
-  nsg_ids                                          = var.nsg_ids
-  route_tables_ids                                 = var.route_tables_ids
-  subnet_delegation                                = var.subnet_delegation
-  subnet_private_endpoint_network_policies_enabled = var.subnet_private_endpoint_network_policies_enabled
-  subnet_names                                     = var.subnet_names
-  subnet_prefixes                                  = var.subnet_prefixes
-  subnet_service_endpoints                         = var.subnet_service_endpoints
-  resource_group_name                              = module.resource_names["resource_group_vnet"].minimal_random_suffix
-  vnet_name                                        = module.resource_names["vnet"].minimal_random_suffix
-  tags                                             = merge(var.tags, { resource_name = module.resource_names["vnet"].standard })
+  resource_group_name  = module.resource_group.name
+  vnet_name            = module.resource_names["vnet"].minimal_random_suffix
+  vnet_location        = var.location
+  address_space        = var.address_space
+  bgp_community        = var.bgp_community
+  ddos_protection_plan = var.ddos_protection_plan
+  dns_servers          = var.dns_servers
+
+  subnets = {
+    for idx, subnet_name in var.subnet_names : subnet_name => {
+      prefix = var.subnet_prefixes[idx]
+
+      delegation = lookup(var.subnet_delegation, subnet_name, {})
+
+      service_endpoints = lookup(var.subnet_service_endpoints, subnet_name, [])
+
+      private_endpoint_network_policies_enabled = lookup(
+        var.subnet_private_endpoint_network_policies_enabled,
+        subnet_name,
+        false
+      )
+
+      network_security_group_id = lookup(var.nsg_ids, subnet_name, null)
+      route_table_id            = lookup(var.route_tables_ids, subnet_name, null)
+    }
+  }
+
+  tags = merge(var.tags, { resource_name = module.resource_names["vnet"].standard })
 
   depends_on = [module.resource_group]
 }
@@ -97,7 +109,7 @@ module "key_vault" {
 
   role_assignments = local.role_assignments
 
-  subnet_id                   = module.network.vnet_subnets[0]
+  subnet_id                   = module.network.subnet_name_id_map[var.subnet_names[0]]
   private_dns_zone_group_name = var.private_dns_zone_group_name
   private_dns_zone_ids        = [module.private_dns_zone.id]
   is_manual_connection        = var.is_manual_connection
@@ -106,8 +118,15 @@ module "key_vault" {
   certificates                = var.certificates
   secrets                     = var.secrets
 
-  certificate_issuers    = var.certificate_issuers
-  generated_certificates = var.generated_certificates
+  certificate_issuers        = var.certificate_issuers
+  generated_certificates     = var.generated_certificates
+  action_group               = var.action_group
+  action_group_ids           = var.action_group_ids
+  metric_alerts              = var.metric_alerts
+  scheduled_query_alerts     = var.scheduled_query_alerts
+  log_analytics_workspace    = var.log_analytics_workspace
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+  diagnostic_settings        = var.diagnostic_settings
 
   tags = merge(var.tags, { resource_name = module.resource_names["key_vault"].standard })
 

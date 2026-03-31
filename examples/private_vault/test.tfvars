@@ -5,7 +5,7 @@ purge_protection_enabled        = false
 sku_name                        = "standard"
 access_policies                 = {}
 enable_rbac_authorization       = true
-role_assignment_type            = "User"
+role_assignment_type            = "ServicePrincipal"
 network_acls = {
   bypass                     = "AzureServices"
   default_action             = "Allow"
@@ -37,7 +37,6 @@ nsg_ids                  = {}
 route_tables_ids         = {}
 subnet_delegation        = {}
 subnet_service_endpoints = {}
-use_for_each             = true
 subnet_private_endpoint_network_policies_enabled = {
   private-endpoint-sbnt = false
 }
@@ -82,6 +81,27 @@ metric_alerts = {
   }
 }
 
+scheduled_query_alerts = {
+  kv_secret_operation_failures = {
+    description            = "Alert when Key Vault secret operations fail"
+    severity               = 2
+    enabled                = true
+    frequency              = 5
+    time_window            = 30
+    trigger_operator       = "GreaterThan"
+    trigger_threshold      = 0
+    email_subject          = "Key Vault secret operation failures detected"
+    custom_webhook_payload = "{\"alertType\":\"scheduled-query\",\"service\":\"key-vault\"}"
+    query                  = <<-QUERY
+      AzureDiagnostics
+      | where ResourceProvider == "MICROSOFT.KEYVAULT"
+      | where Category == "AuditEvent"
+      | where OperationName has "Secret"
+      | where ResultType != "Success"
+      | summarize FailureCount = count() by bin(TimeGenerated, 5m)
+    QUERY
+  }
+}
 
 # Log Analytics Workspace
 log_analytics_workspace = {
