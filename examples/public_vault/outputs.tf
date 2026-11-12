@@ -49,3 +49,13 @@ output "key_ids" {
   description = "IDs of the keys from the Key Vault in the reference module"
   value       = module.key_vault.key_ids
 }
+
+output "scheduled_query_alert_ids" {
+  description = "IDs of the scheduled query alerts created by the reference module"
+  value       = module.key_vault.scheduled_query_alert_ids
+}
+
+output "scheduled_query_alert_names" {
+  description = "Names of the scheduled query alerts created by the reference module"
+  value       = module.key_vault.scheduled_query_alert_names
+}

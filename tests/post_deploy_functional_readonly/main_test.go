@@ -33,5 +33,5 @@ func TestVaultKeyModule(t *testing.T) {
 		SetTestConfigFileName(infraTFVarFileNameDefault).
 		Build()
 
-	lib.RunNonDestructiveTest(t, *ctx, testimpl.TestKeyVaultComplete)
+	lib.RunNonDestructiveTest(t, *ctx, testimpl.TestComposableKeyVault)
 }
