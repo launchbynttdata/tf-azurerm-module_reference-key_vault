@@ -31,7 +31,7 @@ module "resource_names" {
 
 module "resource_group" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/resource_group/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   name     = module.resource_names["resource_group_vnet"].minimal_random_suffix
   location = var.location
@@ -40,7 +40,7 @@ module "resource_group" {
 
 module "network" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/virtual_network/azurerm"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   resource_group_name  = module.resource_group.name
   vnet_name            = module.resource_names["vnet"].minimal_random_suffix
@@ -76,7 +76,7 @@ module "network" {
 
 module "private_dns_zone" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/private_dns_zone/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   resource_group_name = module.resource_group.name
   zone_name           = var.zone_name

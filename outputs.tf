@@ -75,3 +75,11 @@ output "scheduled_query_alert_names" {
     name => module_ref.scheduled_query_alert_name
   }
 }
+
+output "scheduled_query_alert_principal_ids" {
+  description = "Principal IDs of the scheduled query alerts' SystemAssigned identities, for granting them read access to the resources their queries read. Null for alerts with no identity, and empty for UserAssigned."
+  value = {
+    for name, module_ref in module.monitor_scheduled_query_alert :
+    name => module_ref.scheduled_query_alert_principal_id
+  }
+}

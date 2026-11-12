@@ -462,30 +462,67 @@ variable "metric_alerts" {
 ############################################################
 
 variable "scheduled_query_alerts" {
+  description = <<-EOT
+    Map of scheduled query alerts to create. Each key is used as the alert name. The shape follows
+    azurerm_monitor_scheduled_query_rules_alert_v2; see the monitor_scheduled_query_alert primitive for
+    the per-field detail, which this module passes through and does not re-validate.
+
+    scope_id:         Resource the rule queries. Defaults to the Log Analytics workspace this module
+                      creates, then to log_analytics_workspace_id.
+    action_group_ids: Action groups for this alert only, added to the module's action_group and
+                      action_group_ids.
+
+    criteria.query must be valid against the scope's schema, because Azure checks it on create unless
+    skip_query_validation is true. A query that splits by a column must project that column, and one
+    that aggregates a value must project the metric_measure_column.
+  EOT
+
   type = map(object({
-    data_source_id          = optional(string)
-    description             = optional(string, "")
-    enabled                 = optional(bool, true)
-    query                   = string
-    severity                = optional(number, 1)
-    frequency               = optional(number, 5)
-    time_window             = optional(number, 30)
-    authorized_resource_ids = optional(list(string), [])
-    trigger_operator        = optional(string, "GreaterThan")
-    trigger_threshold       = optional(number, 0)
-    action_group_ids        = optional(list(string), [])
-    email_subject           = optional(string, "Alert Notification")
-    custom_webhook_payload  = optional(string, "{}")
+    scope_id     = optional(string)
+    description  = optional(string, "")
+    display_name = optional(string)
+    enabled      = optional(bool, true)
+    severity     = optional(number, 1)
+
+    evaluation_frequency = optional(string, "PT5M")
+    window_duration      = optional(string, "PT30M")
+
+    criteria = object({
+      query                   = string
+      threshold               = number
+      operator                = optional(string, "GreaterThan")
+      time_aggregation_method = optional(string, "Count")
+      metric_measure_column   = optional(string)
+      resource_id_column      = optional(string)
+      dimensions = optional(list(object({
+        name     = string
+        values   = list(string)
+        operator = optional(string, "Include")
+      })), [])
+      failing_periods = optional(object({
+        minimum_failing_periods_to_trigger_alert = number
+        number_of_evaluation_periods             = number
+      }))
+    })
+
+    auto_mitigation_enabled           = optional(bool, false)
+    mute_actions_after_alert_duration = optional(string)
+    query_time_range_override         = optional(string)
+    skip_query_validation             = optional(bool, false)
+    target_resource_types             = optional(list(string), [])
+    workspace_alerts_storage_enabled  = optional(bool, false)
+
+    action_group_ids  = optional(list(string), [])
+    email_subject     = optional(string)
+    custom_properties = optional(map(string), {})
+
+    identity = optional(object({
+      type         = string
+      identity_ids = optional(list(string), [])
+    }))
   }))
 
   default = {}
-
-  validation {
-    condition = alltrue([
-      for alert in values(var.scheduled_query_alerts) : can(jsondecode(alert.custom_webhook_payload))
-    ])
-    error_message = "Each scheduled query alert custom_webhook_payload must be a valid JSON string."
-  }
 }
 
 ############################################################
