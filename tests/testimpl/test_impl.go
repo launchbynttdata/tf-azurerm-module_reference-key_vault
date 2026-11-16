@@ -129,6 +129,12 @@ func checkScheduledQueryAlert(t *testing.T, ctx types.TestContext, subscriptionI
 		actualCustomProperties[key] = *value
 	}
 	assert.Equal(t, expectedCustomProperties, actualCustomProperties)
+
+	// The examples pass their own resource_name in tags, which overrides the alert's.
+	require.Contains(t, rule.Tags, "provisioner")
+	assert.Equal(t, "terraform", *rule.Tags["provisioner"])
+	require.Contains(t, rule.Tags, "Purpose")
+	assert.Equal(t, "Terraform Examples", *rule.Tags["Purpose"])
 }
 
 func getKeyVaultClient(t *testing.T, subscriptionId string, cred *azidentity.DefaultAzureCredential) *armkeyvault.VaultsClient {

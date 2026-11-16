@@ -22,6 +22,12 @@ Every other composed primitive moves to its current major. Their inputs, outputs
 addresses are unchanged across those bumps, so the bumps alone move nothing in state. Moving from
 azurerm 3.x to 4.x can still change other resources, so read your own plan before applying.
 
+Terraform uses one azurerm version for the whole configuration, so the rest of your configuration
+must also work on azurerm 4.x. In particular, the 4.x provider requires a subscription ID, set as
+`subscription_id` in the `provider "azurerm"` block or through `ARM_SUBSCRIPTION_ID`. HashiCorp's
+[4.0 upgrade guide](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/4.0-upgrade-guide)
+lists the other provider-level changes.
+
 ### `scheduled_query_alerts` is a different shape
 
 Every alert field except `description`, `enabled`, `severity` and `action_group_ids` changed. The map
@@ -30,7 +36,7 @@ durations instead of minutes:
 
 | 2.x | 3.x |
 |-----|-----|
-| `query`, `trigger_operator`, `trigger_threshold` | `criteria.query`, `criteria.operator`, `criteria.threshold`, plus `criteria.time_aggregation_method` |
+| `query`, `trigger_operator`, `trigger_threshold` (default `0`) | `criteria.query`, `criteria.operator`, `criteria.threshold` (required, no default), plus `criteria.time_aggregation_method` |
 | `frequency` (minutes) | `evaluation_frequency` (ISO 8601, e.g. `PT5M`) |
 | `time_window` (minutes) | `window_duration` (ISO 8601, e.g. `PT30M`) |
 | `data_source_id` | `scope_id` |
@@ -52,6 +58,9 @@ gives the principal of a SystemAssigned identity.
 
 An unset `email_subject` leaves the subject to Azure. Set it to keep the 2.x `"Alert Notification"`
 subject.
+
+Alerts are now tagged like the module's other resources: `resource_name` (the alert name),
+`provisioner = "terraform"`, and `tags`, which overrides both.
 
 ### The alerts are replaced, not updated
 

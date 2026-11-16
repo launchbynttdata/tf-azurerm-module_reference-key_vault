@@ -257,6 +257,8 @@ module "monitor_scheduled_query_alert" {
     each.value.action_group_ids
   )
 
+  tags = merge({ resource_name = each.key }, local.default_tags, var.tags)
+
   depends_on = [
     module.key_vault,
     module.monitor_action_group,
