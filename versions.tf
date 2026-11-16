@@ -11,7 +11,8 @@
 // limitations under the License.
 
 terraform {
-  required_version = "~> 1.5"
+  # 1.9: variable validations that reference other variables.
+  required_version = "~> 1.9"
 
   required_providers {
     azurerm = {

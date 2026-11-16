@@ -309,10 +309,15 @@ variable "role_assignments" {
 variable "subnet_id" {
   description = <<EOT
     The ID of the Subnet from which Private IP Addresses will be allocated for this Private Endpoint.
-    Changing this forces a new resource to be created.
+    Changing this forces a new resource to be created. Required when public_network_access_enabled is false.
   EOT
   type        = string
   default     = null
+
+  validation {
+    condition     = var.public_network_access_enabled || var.subnet_id != null
+    error_message = "subnet_id is required when public_network_access_enabled is false, for the private endpoint this module creates."
+  }
 }
 
 variable "private_dns_zone_ids" {
@@ -465,7 +470,8 @@ variable "metric_alerts" {
 
 variable "scheduled_query_alerts" {
   description = <<-EOT
-    Map of scheduled query alerts to create. Each key is used as the alert name. The shape follows
+    Map of scheduled query alerts to create. Each alert is named after the scheduled_query_alert entry
+    of resource_names_map, then -<key>. The shape follows
     azurerm_monitor_scheduled_query_rules_alert_v2; see the monitor_scheduled_query_alert primitive for
     the per-field detail, which this module passes through and does not re-validate.
 
@@ -526,6 +532,15 @@ variable "scheduled_query_alerts" {
   }))
 
   default = {}
+
+  validation {
+    condition = alltrue([
+      for alert in values(var.scheduled_query_alerts) : alert.scope_id != null
+      ]) || anytrue([
+      for setting in values(var.diagnostic_settings) : try(length(setting.enabled_log), 0) > 0
+    ])
+    error_message = "Scheduled query alerts are scoped to the Key Vault by default, so diagnostic_settings must send at least one log category to a workspace. Add one, or set scope_id on every alert."
+  }
 }
 
 ############################################################

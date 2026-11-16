@@ -314,22 +314,3 @@ module "diagnostic_setting" {
     module.log_analytics_workspace
   ]
 }
-
-# Fails the plan on input combinations that would otherwise fail mid-apply or deploy alerts that never fire.
-resource "terraform_data" "input_checks" {
-  lifecycle {
-    precondition {
-      condition     = var.public_network_access_enabled || var.subnet_id != null
-      error_message = "subnet_id is required when public_network_access_enabled is false, for the private endpoint this module creates."
-    }
-
-    precondition {
-      condition = alltrue([
-        for alert in values(var.scheduled_query_alerts) : alert.scope_id != null
-        ]) || anytrue([
-        for setting in values(var.diagnostic_settings) : try(length(setting.enabled_log), 0) > 0
-      ])
-      error_message = "Scheduled query alerts are scoped to the Key Vault by default, so diagnostic_settings must send at least one log category to a workspace. Add one, or set scope_id on every alert."
-    }
-  }
-}
