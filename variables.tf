@@ -467,8 +467,9 @@ variable "scheduled_query_alerts" {
     azurerm_monitor_scheduled_query_rules_alert_v2; see the monitor_scheduled_query_alert primitive for
     the per-field detail, which this module passes through and does not re-validate.
 
-    scope_id:         Resource the rule queries. Defaults to the Log Analytics workspace this module
-                      creates, then to log_analytics_workspace_id.
+    scope_id:         Resource the rule queries. Defaults to this module's Key Vault, so the query
+                      only sees that vault's logs, in whichever workspace its diagnostic settings
+                      send them to. Set a workspace ID to query everything in that workspace.
     action_group_ids: Action groups for this alert only, added to the module's action_group and
                       action_group_ids.
 

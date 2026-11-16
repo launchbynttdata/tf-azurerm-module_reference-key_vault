@@ -87,14 +87,10 @@ func checkScheduledQueryAlert(t *testing.T, ctx types.TestContext, subscriptionI
 	properties := rule.Properties
 	require.NotNil(t, properties)
 
-	// With no scope_id on the alert, the module falls back to the workspace it creates.
-	workspacePrefix := strings.ToLower(fmt.Sprintf(
-		"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/",
-		subscriptionId, resourceGroupName,
-	))
+	// With no scope_id on the alert, the module scopes it to the Key Vault.
+	keyVaultID := terraform.Output(t, options, "key_vault_id")
 	require.Len(t, properties.Scopes, 1)
-	assert.True(t, strings.HasPrefix(strings.ToLower(*properties.Scopes[0]), workspacePrefix),
-		"alert scope %q should be a workspace in %s", *properties.Scopes[0], resourceGroupName)
+	assert.Equal(t, strings.ToLower(keyVaultID), strings.ToLower(*properties.Scopes[0]))
 
 	assert.Equal(t, monitor.AlertSeverityTwo, *properties.Severity)
 	assert.Equal(t, expectedEvaluationFrequency, *properties.EvaluationFrequency)

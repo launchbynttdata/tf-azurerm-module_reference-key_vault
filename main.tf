@@ -224,11 +224,7 @@ module "monitor_scheduled_query_alert" {
   location            = var.location
   alert_name          = each.key
 
-  scope_id = coalesce(
-    each.value.scope_id,
-    try(module.log_analytics_workspace[0].id, null),
-    var.log_analytics_workspace_id
-  )
+  scope_id = coalesce(each.value.scope_id, module.key_vault.key_vault_id)
 
   description  = each.value.description
   display_name = each.value.display_name
