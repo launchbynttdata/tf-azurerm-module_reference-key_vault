@@ -104,7 +104,6 @@ scheduled_query_alerts = {
       threshold = 0
       query     = <<-QUERY
         AzureDiagnostics
-        | where ResourceProvider == "MICROSOFT.KEYVAULT"
         | where Category == "AuditEvent"
         | where OperationName has "Secret"
         | where ResultType != "Success"

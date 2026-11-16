@@ -33,7 +33,7 @@ generated_certificates = {
       key_usage          = ["digitalSignature", "nonRepudiation", "keyCertSign", "keyEncipherment", "dataEncipherment"]
       subject            = "CN=Launch DSO Test Certificate"
       validity_in_months = 12
-      subject_alternate_names = {
+      subject_alternative_names = {
         emails    = ["test@launchdso.nttdata.com"]
         dns_names = ["launchdso.nttdata.com"]
       }
@@ -106,7 +106,6 @@ scheduled_query_alerts = {
       threshold = 0
       query     = <<-QUERY
         AzureDiagnostics
-        | where ResourceProvider == "MICROSOFT.KEYVAULT"
         | where Category == "AuditEvent"
         | where OperationName has "Secret"
         | where ResultType != "Success"

@@ -101,7 +101,7 @@ func checkScheduledQueryAlert(t *testing.T, ctx types.TestContext, subscriptionI
 	require.NotNil(t, properties.Criteria)
 	require.Len(t, properties.Criteria.AllOf, 1)
 	condition := properties.Criteria.AllOf[0]
-	assert.Contains(t, *condition.Query, "MICROSOFT.KEYVAULT")
+	assert.Contains(t, *condition.Query, "AuditEvent")
 	assert.Equal(t, monitor.ConditionOperatorGreaterThan, *condition.Operator)
 	assert.Equal(t, monitor.TimeAggregationCount, *condition.TimeAggregation)
 	assert.Equal(t, expectedThreshold, *condition.Threshold)

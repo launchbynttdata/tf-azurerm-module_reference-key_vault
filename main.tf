@@ -222,7 +222,7 @@ module "monitor_scheduled_query_alert" {
 
   resource_group_name = local.resource_group_name
   location            = var.location
-  alert_name          = each.key
+  alert_name          = local.scheduled_query_alert_names[each.key]
 
   scope_id = coalesce(each.value.scope_id, module.key_vault.key_vault_id)
 
@@ -253,7 +253,7 @@ module "monitor_scheduled_query_alert" {
     each.value.action_group_ids
   )
 
-  tags = merge({ resource_name = each.key }, local.default_tags, var.tags)
+  tags = merge({ resource_name = local.scheduled_query_alert_names[each.key] }, local.default_tags, var.tags)
 
   depends_on = [
     module.key_vault,
@@ -278,6 +278,7 @@ module "log_analytics_workspace" {
 
   sku                           = var.log_analytics_workspace.sku
   retention_in_days             = var.log_analytics_workspace.retention_in_days
+  daily_quota_gb                = var.log_analytics_workspace.daily_quota_gb
   identity                      = var.log_analytics_workspace.identity
   local_authentication_disabled = var.log_analytics_workspace.local_authentication_disabled
 
@@ -312,4 +313,23 @@ module "diagnostic_setting" {
     module.key_vault,
     module.log_analytics_workspace
   ]
+}
+
+# Fails the plan on input combinations that would otherwise fail mid-apply or deploy alerts that never fire.
+resource "terraform_data" "input_checks" {
+  lifecycle {
+    precondition {
+      condition     = var.public_network_access_enabled || var.subnet_id != null
+      error_message = "subnet_id is required when public_network_access_enabled is false, for the private endpoint this module creates."
+    }
+
+    precondition {
+      condition = alltrue([
+        for alert in values(var.scheduled_query_alerts) : alert.scope_id != null
+        ]) || anytrue([
+        for setting in values(var.diagnostic_settings) : try(length(setting.enabled_log), 0) > 0
+      ])
+      error_message = "Scheduled query alerts are scoped to the Key Vault by default, so diagnostic_settings must send at least one log category to a workspace. Add one, or set scope_id on every alert."
+    }
+  }
 }

@@ -67,15 +67,12 @@ Alerts are now tagged like the module's other resources: `resource_name` (the al
 The underlying resource type changes, so no `moved` block can carry state. Terraform destroys each
 2.x rule and creates a v2 one, losing the alert history.
 
-Both Terraform resource types manage the same ARM resource type,
-`Microsoft.Insights/scheduledQueryRules`, and differ only in API version. An old rule and a v2 rule
-with the same name are therefore the same ARM ID. The v2 create fails the provider's import check
-while a rule already exists at that ID, and Terraform does not order the old destroy before the v2
-create, because they are separate resources with no dependency between them. A replacement that keeps
-the same alert name therefore depends on timing. Each alert is named after its
-`scheduled_query_alerts` key, so **changing the key is the simplest way to get a new name**.
-Otherwise, apply 2.x with the alerts removed from `scheduled_query_alerts`, then upgrade and add them
-back.
+Alert names now come from the naming module like the module's other resources: the
+`scheduled_query_alert` entry of `resource_names_map`, then `-<key>`. In 2.x an alert was named
+after its bare key. Both Terraform resource types manage the same ARM resource type,
+`Microsoft.Insights/scheduledQueryRules`, so a v2 rule with the old name would collide with the old
+rule. The new names differ from the old ones, so the replacement does not collide. If you pass your
+own `resource_names_map`, add a `scheduled_query_alert` entry to it.
 
 ### Queries are validated against the scope
 
@@ -94,8 +91,30 @@ whichever workspace they are sent to. A query that filtered on `ResourceProvider
 other vaults sharing the workspace. Fired alerts name the vault as their target resource.
 
 The vault's logs must reach a workspace through `diagnostic_settings`. Without them the query
-returns nothing and the alert never fires. To keep the 2.x behaviour, set `scope_id` to the
-workspace ID.
+returns nothing and the alert never fires, so the plan fails when an alert has no `scope_id` and no
+diagnostic setting sends a log category. To keep the 2.x behaviour, set `scope_id` to the workspace
+ID.
+
+### Key Vault defaults are secure by default
+
+Three defaults change. Set each one explicitly to keep the 2.x behaviour.
+
+| Input | 2.x default | 3.x default | What changes on an existing vault that used the default |
+|-------|-------------|-------------|----------------------------------------------------------|
+| `enable_rbac_authorization` | `false` | `true` | Authorization switches from access policies to Azure RBAC. `access_policies` stop applying, so grant access through `role_assignments` first. |
+| `purge_protection_enabled` | `false` | `true` | Purge protection is enabled. **This cannot be undone:** a deleted vault can then only be purged after its retention period. |
+| `public_network_access_enabled` | `true` | `false` | Public access is turned off and the module creates a private endpoint, so `subnet_id` is required. The plan fails without it. |
+
+`soft_delete_retention_days` stays at `7`. Azure does not allow changing it once a vault exists, so a
+new default would fail every upgrade.
+
+### Other changes
+
+- `log_analytics_workspace.daily_quota_gb` now reaches the workspace. In 2.x it was required but
+  ignored, so the workspace had no daily cap.
+- `metric_alerts.action_groups` is removed. It was never used; alerts take `action_group` and
+  `action_group_ids`.
+- The unused `diagnostic_setting` entry is removed from the default `resource_names_map`.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -126,7 +145,9 @@ workspace ID.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [terraform_data.input_checks](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 
 ## Inputs
 
@@ -137,8 +158,8 @@ No resources.
 | <a name="input_action_group_ids"></a> [action\_group\_ids](#input\_action\_group\_ids) | A list of action group IDs. | `list(string)` | `[]` | no |
 | <a name="input_certificate_issuers"></a> [certificate\_issuers](#input\_certificate\_issuers) | List of certificate issuers to be created | <pre>map(object({<br/>    provider_name = string<br/>    org_id        = string<br/>    account_id    = string<br/>    password      = string<br/><br/>    admins = optional(list(object({<br/>      email_address = string<br/>      first_name    = optional(string)<br/>      last_name     = optional(string)<br/>      phone         = optional(string)<br/>    })), [])<br/>  }))</pre> | `{}` | no |
 | <a name="input_certificates"></a> [certificates](#input\_certificates) | List of certificates to be imported. If `filepath` is specified then the pfx files should be present in the root of the module (path.root). If `content` is specified then the content of the certificate should be provided in base 64 encoded format. Only one of them should be provided. | <pre>map(object({<br/>    contents = optional(string)<br/>    filepath = optional(string)<br/>    password = optional(string)<br/>  }))</pre> | `{}` | no |
-| <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | n/a | <pre>map(object({<br/><br/>    enabled_log = optional(list(object({<br/>      category_group = optional(string, "allLogs")<br/>      category       = optional(string, null)<br/>    })))<br/><br/>    metrics = optional(list(object({<br/>      category = string<br/>      enabled  = optional(bool)<br/>    })))<br/><br/>  }))</pre> | `{}` | no |
-| <a name="input_enable_rbac_authorization"></a> [enable\_rbac\_authorization](#input\_enable\_rbac\_authorization) | Enable RBAC authorization for the key vault | `bool` | `false` | no |
+| <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | n/a | <pre>map(object({<br/><br/>    enabled_log = optional(list(object({<br/>      category_group = optional(string, "allLogs")<br/>      category       = optional(string, null)<br/>    })))<br/><br/>    metrics = optional(list(object({<br/>      category = string<br/>      enabled  = optional(bool)<br/>    })), [])<br/><br/>  }))</pre> | `{}` | no |
+| <a name="input_enable_rbac_authorization"></a> [enable\_rbac\_authorization](#input\_enable\_rbac\_authorization) | Enable RBAC authorization for the key vault. When true, access\_policies are ignored and access is granted through role\_assignments. | `bool` | `true` | no |
 | <a name="input_enabled_for_deployment"></a> [enabled\_for\_deployment](#input\_enabled\_for\_deployment) | If Azure VM is permitted to retrieve secrets | `bool` | `false` | no |
 | <a name="input_enabled_for_template_deployment"></a> [enabled\_for\_template\_deployment](#input\_enabled\_for\_template\_deployment) | If Azure RM is permitted to retrieve secrets | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment in which the resource should be provisioned like dev, qa, prod etc. | `string` | n/a | yes |
@@ -151,20 +172,20 @@ No resources.
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | (Optional) The ID of the Log Analytics Workspace. | `string` | `null` | no |
 | <a name="input_logical_product_family"></a> [logical\_product\_family](#input\_logical\_product\_family) | (Required) Name of the product family for which the resource is created.<br/>    Example: org\_name, department\_name. | `string` | n/a | yes |
 | <a name="input_logical_product_service"></a> [logical\_product\_service](#input\_logical\_product\_service) | (Required) Name of the product service for which the resource is created.<br/>    For example, backend, frontend, middleware etc. | `string` | n/a | yes |
-| <a name="input_metric_alerts"></a> [metric\_alerts](#input\_metric\_alerts) | n/a | <pre>map(object({<br/><br/>    description        = string<br/>    action_groups      = optional(set(string), [])<br/>    frequency          = optional(string, "PT1M")<br/>    severity           = optional(number, 3)<br/>    enabled            = optional(bool, true)<br/>    webhook_properties = optional(map(string))<br/><br/>    criteria = optional(list(object({<br/>      metric_namespace       = string<br/>      metric_name            = string<br/>      aggregation            = string<br/>      operator               = string<br/>      threshold              = number<br/>      skip_metric_validation = optional(bool, false)<br/><br/>      dimensions = optional(list(object({<br/>        name     = string<br/>        operator = string<br/>        values   = list(string)<br/>      })))<br/>    })))<br/><br/>    dynamic_criteria = optional(object({<br/>      metric_namespace       = string<br/>      metric_name            = string<br/>      aggregation            = string<br/>      operator               = string<br/>      alert_sensitivity      = string<br/>      ignore_data_before     = optional(string)<br/>      skip_metric_validation = optional(bool, false)<br/><br/>      dimensions = optional(list(object({<br/>        name     = string<br/>        operator = string<br/>        values   = list(string)<br/>      })))<br/>    }))<br/><br/>  }))</pre> | `{}` | no |
+| <a name="input_metric_alerts"></a> [metric\_alerts](#input\_metric\_alerts) | n/a | <pre>map(object({<br/><br/>    description        = string<br/>    frequency          = optional(string, "PT1M")<br/>    severity           = optional(number, 3)<br/>    enabled            = optional(bool, true)<br/>    webhook_properties = optional(map(string))<br/><br/>    criteria = optional(list(object({<br/>      metric_namespace       = string<br/>      metric_name            = string<br/>      aggregation            = string<br/>      operator               = string<br/>      threshold              = number<br/>      skip_metric_validation = optional(bool, false)<br/><br/>      dimensions = optional(list(object({<br/>        name     = string<br/>        operator = string<br/>        values   = list(string)<br/>      })))<br/>    })))<br/><br/>    dynamic_criteria = optional(object({<br/>      metric_namespace       = string<br/>      metric_name            = string<br/>      aggregation            = string<br/>      operator               = string<br/>      alert_sensitivity      = string<br/>      ignore_data_before     = optional(string)<br/>      skip_metric_validation = optional(bool, false)<br/><br/>      dimensions = optional(list(object({<br/>        name     = string<br/>        operator = string<br/>        values   = list(string)<br/>      })))<br/>    }))<br/><br/>  }))</pre> | `{}` | no |
 | <a name="input_network_acls"></a> [network\_acls](#input\_network\_acls) | Network ACLs for the key vault | <pre>object({<br/>    bypass                     = string<br/>    default_action             = string<br/>    ip_rules                   = optional(list(string))<br/>    virtual_network_subnet_ids = optional(list(string))<br/>  })</pre> | <pre>{<br/>  "bypass": "AzureServices",<br/>  "default_action": "Allow",<br/>  "ip_rules": [],<br/>  "virtual_network_subnet_ids": []<br/>}</pre> | no |
 | <a name="input_private_dns_zone_group_name"></a> [private\_dns\_zone\_group\_name](#input\_private\_dns\_zone\_group\_name) | Specifies the Name of the Private DNS Zone Group. | `string` | `"vault"` | no |
 | <a name="input_private_dns_zone_ids"></a> [private\_dns\_zone\_ids](#input\_private\_dns\_zone\_ids) | A list of Private DNS Zone IDs to link with the Private Endpoint. | `list(string)` | `[]` | no |
-| <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | (Optional) Whether public network access is allowed for this Key Vault. Defaults to true. If false, then only private<br/>    endpoints can access the Key Vault. | `bool` | `true` | no |
-| <a name="input_purge_protection_enabled"></a> [purge\_protection\_enabled](#input\_purge\_protection\_enabled) | If purge\_protection is enabled | `bool` | `false` | no |
+| <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | (Optional) Whether public network access is allowed for this Key Vault. Defaults to false, in which case only private<br/>    endpoints can access the Key Vault and subnet\_id is required for the one this module creates. | `bool` | `false` | no |
+| <a name="input_purge_protection_enabled"></a> [purge\_protection\_enabled](#input\_purge\_protection\_enabled) | If purge protection is enabled. Once enabled on a Key Vault it cannot be disabled, and a deleted vault<br/>    cannot be purged before soft\_delete\_retention\_days have passed. | `bool` | `true` | no |
 | <a name="input_request_message"></a> [request\_message](#input\_request\_message) | A message passed to the owner of the remote resource when the private endpoint attempts to establish the connection<br/>    to the remote resource. The request message can be a maximum of 140 characters in length.<br/>    Only valid if `is_manual_connection=true` | `string` | `""` | no |
-| <a name="input_resource_names_map"></a> [resource\_names\_map](#input\_resource\_names\_map) | A map of key to resource\_name that will be used by tf-launch-module\_library-resource\_name to generate resource names | <pre>map(object({<br/>    name       = string<br/>    max_length = optional(number, 60)<br/>  }))</pre> | <pre>{<br/>  "diagnostic_setting": {<br/>    "max_length": 80,<br/>    "name": "ds"<br/>  },<br/>  "key_vault": {<br/>    "max_length": 24,<br/>    "name": "kv"<br/>  },<br/>  "log_analytics_workspace": {<br/>    "max_length": 80,<br/>    "name": "law"<br/>  },<br/>  "private_endpoint": {<br/>    "max_length": 80,<br/>    "name": "pe"<br/>  },<br/>  "private_service_connection": {<br/>    "max_length": 80,<br/>    "name": "pesc"<br/>  },<br/>  "resource_group": {<br/>    "max_length": 80,<br/>    "name": "rg"<br/>  }<br/>}</pre> | no |
+| <a name="input_resource_names_map"></a> [resource\_names\_map](#input\_resource\_names\_map) | A map of key to resource\_name that will be used by tf-launch-module\_library-resource\_name to generate resource names | <pre>map(object({<br/>    name       = string<br/>    max_length = optional(number, 60)<br/>  }))</pre> | <pre>{<br/>  "key_vault": {<br/>    "max_length": 24,<br/>    "name": "kv"<br/>  },<br/>  "log_analytics_workspace": {<br/>    "max_length": 80,<br/>    "name": "law"<br/>  },<br/>  "private_endpoint": {<br/>    "max_length": 80,<br/>    "name": "pe"<br/>  },<br/>  "private_service_connection": {<br/>    "max_length": 80,<br/>    "name": "pesc"<br/>  },<br/>  "resource_group": {<br/>    "max_length": 80,<br/>    "name": "rg"<br/>  },<br/>  "scheduled_query_alert": {<br/>    "max_length": 60,<br/>    "name": "sqa"<br/>  }<br/>}</pre> | no |
 | <a name="input_resource_number"></a> [resource\_number](#input\_resource\_number) | The resource count for the respective resource. Defaults to 000. Increments in value of 1 | `string` | `"000"` | no |
 | <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments) | A map of role assignments to be created | <pre>map(object({<br/>    role_definition_name = string<br/>    principal_id         = string<br/>    principal_type       = string<br/>  }))</pre> | `{}` | no |
 | <a name="input_scheduled_query_alerts"></a> [scheduled\_query\_alerts](#input\_scheduled\_query\_alerts) | Map of scheduled query alerts to create. Each key is used as the alert name. The shape follows<br/>azurerm\_monitor\_scheduled\_query\_rules\_alert\_v2; see the monitor\_scheduled\_query\_alert primitive for<br/>the per-field detail, which this module passes through and does not re-validate.<br/><br/>scope\_id:         Resource the rule queries. Defaults to this module's Key Vault, so the query<br/>                  only sees that vault's logs, in whichever workspace its diagnostic settings<br/>                  send them to. Set a workspace ID to query everything in that workspace.<br/>action\_group\_ids: Action groups for this alert only, added to the module's action\_group and<br/>                  action\_group\_ids.<br/><br/>criteria.query must be valid against the scope's schema, because Azure checks it on create unless<br/>skip\_query\_validation is true. A query that splits by a column must project that column, and one<br/>that aggregates a value must project the metric\_measure\_column. | <pre>map(object({<br/>    scope_id     = optional(string)<br/>    description  = optional(string, "")<br/>    display_name = optional(string)<br/>    enabled      = optional(bool, true)<br/>    severity     = optional(number, 1)<br/><br/>    evaluation_frequency = optional(string, "PT5M")<br/>    window_duration      = optional(string, "PT30M")<br/><br/>    criteria = object({<br/>      query                   = string<br/>      threshold               = number<br/>      operator                = optional(string, "GreaterThan")<br/>      time_aggregation_method = optional(string, "Count")<br/>      metric_measure_column   = optional(string)<br/>      resource_id_column      = optional(string)<br/>      dimensions = optional(list(object({<br/>        name     = string<br/>        values   = list(string)<br/>        operator = optional(string, "Include")<br/>      })), [])<br/>      failing_periods = optional(object({<br/>        minimum_failing_periods_to_trigger_alert = number<br/>        number_of_evaluation_periods             = number<br/>      }))<br/>    })<br/><br/>    auto_mitigation_enabled           = optional(bool, false)<br/>    mute_actions_after_alert_duration = optional(string)<br/>    query_time_range_override         = optional(string)<br/>    skip_query_validation             = optional(bool, false)<br/>    target_resource_types             = optional(list(string), [])<br/>    workspace_alerts_storage_enabled  = optional(bool, false)<br/><br/>    action_group_ids  = optional(list(string), [])<br/>    email_subject     = optional(string)<br/>    custom_properties = optional(map(string), {})<br/><br/>    identity = optional(object({<br/>      type         = string<br/>      identity_ids = optional(list(string), [])<br/>    }))<br/>  }))</pre> | `{}` | no |
 | <a name="input_secrets"></a> [secrets](#input\_secrets) | List of secrets (name and value) | `map(string)` | `{}` | no |
 | <a name="input_sku_name"></a> [sku\_name](#input\_sku\_name) | SKU for the key vault - standard or premium | `string` | `"standard"` | no |
-| <a name="input_soft_delete_retention_days"></a> [soft\_delete\_retention\_days](#input\_soft\_delete\_retention\_days) | Number of retention days for soft delete | `number` | `7` | no |
+| <a name="input_soft_delete_retention_days"></a> [soft\_delete\_retention\_days](#input\_soft\_delete\_retention\_days) | Number of retention days for soft delete, between 7 and 90. Azure does not allow changing it once a vault exists. | `number` | `7` | no |
 | <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | The ID of the Subnet from which Private IP Addresses will be allocated for this Private Endpoint.<br/>    Changing this forces a new resource to be created. | `string` | `null` | no |
 | <a name="input_subresource_names"></a> [subresource\_names](#input\_subresource\_names) | A list of subresource names which the Private Endpoint is able to connect to. subresource\_names corresponds to group\_id.<br/>    Possible values are detailed in the product documentation in the Subresources column.<br/>    https://docs.microsoft.com/azure/private-link/private-endpoint-overview#private-link-resource | `list(string)` | <pre>[<br/>  "vault"<br/>]</pre> | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to be associated with the resources | `map(string)` | `{}` | no |

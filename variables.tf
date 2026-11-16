@@ -45,15 +45,18 @@ variable "enabled_for_template_deployment" {
 }
 
 variable "soft_delete_retention_days" {
-  description = "Number of retention days for soft delete"
+  description = "Number of retention days for soft delete, between 7 and 90. Azure does not allow changing it once a vault exists."
   type        = number
   default     = 7
 }
 
 variable "purge_protection_enabled" {
-  description = "If purge_protection is enabled"
+  description = <<EOT
+    If purge protection is enabled. Once enabled on a Key Vault it cannot be disabled, and a deleted vault
+    cannot be purged before soft_delete_retention_days have passed.
+  EOT
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "sku_name" {
@@ -80,9 +83,9 @@ variable "access_policies" {
 }
 
 variable "enable_rbac_authorization" {
-  description = "Enable RBAC authorization for the key vault"
+  description = "Enable RBAC authorization for the key vault. When true, access_policies are ignored and access is granted through role_assignments."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "network_acls" {
@@ -104,11 +107,11 @@ variable "network_acls" {
 
 variable "public_network_access_enabled" {
   description = <<EOT
-    (Optional) Whether public network access is allowed for this Key Vault. Defaults to true. If false, then only private
-    endpoints can access the Key Vault.
+    (Optional) Whether public network access is allowed for this Key Vault. Defaults to false, in which case only private
+    endpoints can access the Key Vault and subnet_id is required for the one this module creates.
   EOT
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "certificates" {
@@ -228,9 +231,9 @@ variable "resource_names_map" {
       max_length = 80
     }
 
-    diagnostic_setting = {
-      name       = "ds"
-      max_length = 80
+    scheduled_query_alert = {
+      name       = "sqa"
+      max_length = 60
     }
   }
 }
@@ -408,7 +411,6 @@ variable "metric_alerts" {
   type = map(object({
 
     description        = string
-    action_groups      = optional(set(string), [])
     frequency          = optional(string, "PT1M")
     severity           = optional(number, 3)
     enabled            = optional(bool, true)
@@ -541,7 +543,7 @@ variable "diagnostic_settings" {
     metrics = optional(list(object({
       category = string
       enabled  = optional(bool)
-    })))
+    })), [])
 
   }))
 

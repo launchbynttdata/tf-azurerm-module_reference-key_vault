@@ -157,9 +157,9 @@ variable "resource_names_map" {
       max_length = 80
     }
 
-    diagnostic_setting = {
-      name       = "ds"
-      max_length = 80
+    scheduled_query_alert = {
+      name       = "sqa"
+      max_length = 60
     }
   }
 }
