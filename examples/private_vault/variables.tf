@@ -45,7 +45,7 @@ variable "soft_delete_retention_days" {
 variable "purge_protection_enabled" {
   description = "If purge_protection is enabled"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "sku_name" {
@@ -71,7 +71,7 @@ variable "access_policies" {
 variable "enable_rbac_authorization" {
   description = "Enable RBAC authorization for the key vault"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "network_acls" {
@@ -157,9 +157,9 @@ variable "resource_names_map" {
       max_length = 80
     }
 
-    diagnostic_setting = {
-      name       = "ds"
-      max_length = 80
+    scheduled_query_alert = {
+      name       = "sqa"
+      max_length = 60
     }
   }
 }

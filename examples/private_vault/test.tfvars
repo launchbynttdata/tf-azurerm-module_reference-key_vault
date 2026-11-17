@@ -83,23 +83,33 @@ metric_alerts = {
 
 scheduled_query_alerts = {
   kv_secret_operation_failures = {
-    description            = "Alert when Key Vault secret operations fail"
-    severity               = 2
-    enabled                = true
-    frequency              = 5
-    time_window            = 30
-    trigger_operator       = "GreaterThan"
-    trigger_threshold      = 0
-    email_subject          = "Key Vault secret operation failures detected"
-    custom_webhook_payload = "{\"alertType\":\"scheduled-query\",\"service\":\"key-vault\"}"
-    query                  = <<-QUERY
-      AzureDiagnostics
-      | where ResourceProvider == "MICROSOFT.KEYVAULT"
-      | where Category == "AuditEvent"
-      | where OperationName has "Secret"
-      | where ResultType != "Success"
-      | summarize FailureCount = count() by bin(TimeGenerated, 5m)
-    QUERY
+    description          = "Alert when Key Vault secret operations fail"
+    severity             = 2
+    enabled              = true
+    evaluation_frequency = "PT5M"
+    window_duration      = "PT30M"
+    email_subject        = "Key Vault secret operation failures detected"
+
+    custom_properties = {
+      alertType = "scheduled-query"
+      service   = "key-vault"
+    }
+
+    # AzureDiagnostics only exists in a new workspace once Key Vault diagnostics
+    # have arrived, which is after the alert is created.
+    skip_query_validation = true
+
+    criteria = {
+      operator  = "GreaterThan"
+      threshold = 0
+      query     = <<-QUERY
+        AzureDiagnostics
+        | where Category == "AuditEvent"
+        | where OperationName has "Secret"
+        | where ResultType != "Success"
+        | summarize FailureCount = count() by bin(TimeGenerated, 5m)
+      QUERY
+    }
   }
 }
 

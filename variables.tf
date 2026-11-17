@@ -45,15 +45,18 @@ variable "enabled_for_template_deployment" {
 }
 
 variable "soft_delete_retention_days" {
-  description = "Number of retention days for soft delete"
+  description = "Number of retention days for soft delete, between 7 and 90. Azure does not allow changing it once a vault exists."
   type        = number
   default     = 7
 }
 
 variable "purge_protection_enabled" {
-  description = "If purge_protection is enabled"
+  description = <<EOT
+    If purge protection is enabled. Once enabled on a Key Vault it cannot be disabled, and a deleted vault
+    cannot be purged before soft_delete_retention_days have passed.
+  EOT
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "sku_name" {
@@ -64,8 +67,8 @@ variable "sku_name" {
 
 variable "access_policies" {
   description = <<EOT
-    Additional Access policies for the vault except the current user which are added by default.
-    Required only when enable_rbac_authorization is set to false.
+    Access policies for the vault, used only when enable_rbac_authorization is false. In that mode an access policy
+    for the identity running Terraform is added by default.
   EOT
   type = map(object({
     object_id               = string
@@ -80,9 +83,9 @@ variable "access_policies" {
 }
 
 variable "enable_rbac_authorization" {
-  description = "Enable RBAC authorization for the key vault"
+  description = "Enable RBAC authorization for the key vault. When true, access_policies are ignored and access is granted through role_assignments."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "network_acls" {
@@ -105,7 +108,7 @@ variable "network_acls" {
 variable "public_network_access_enabled" {
   description = <<EOT
     (Optional) Whether public network access is allowed for this Key Vault. Defaults to true. If false, then only private
-    endpoints can access the Key Vault.
+    endpoints can access the Key Vault and subnet_id is required for the one this module creates.
   EOT
   type        = bool
   default     = true
@@ -228,11 +231,12 @@ variable "resource_names_map" {
       max_length = 80
     }
 
-    diagnostic_setting = {
-      name       = "ds"
-      max_length = 80
+    scheduled_query_alert = {
+      name       = "sqa"
+      max_length = 60
     }
   }
+  nullable = false
 }
 variable "environment" {
   description = "Environment in which the resource should be provisioned like dev, qa, prod etc."
@@ -306,10 +310,15 @@ variable "role_assignments" {
 variable "subnet_id" {
   description = <<EOT
     The ID of the Subnet from which Private IP Addresses will be allocated for this Private Endpoint.
-    Changing this forces a new resource to be created.
+    Changing this forces a new resource to be created. Required when public_network_access_enabled is false.
   EOT
   type        = string
   default     = null
+
+  validation {
+    condition     = var.public_network_access_enabled || (var.subnet_id != null && var.subnet_id != "")
+    error_message = "subnet_id is required when public_network_access_enabled is false, for the private endpoint this module creates."
+  }
 }
 
 variable "private_dns_zone_ids" {
@@ -408,7 +417,6 @@ variable "metric_alerts" {
   type = map(object({
 
     description        = string
-    action_groups      = optional(set(string), [])
     frequency          = optional(string, "PT1M")
     severity           = optional(number, 3)
     enabled            = optional(bool, true)
@@ -462,29 +470,83 @@ variable "metric_alerts" {
 ############################################################
 
 variable "scheduled_query_alerts" {
+  description = <<-EOT
+    Map of scheduled query alerts to create. Each alert is named after the scheduled_query_alert entry
+    of resource_names_map, then -<key>. The shape follows
+    azurerm_monitor_scheduled_query_rules_alert_v2; see the monitor_scheduled_query_alert primitive for
+    the per-field detail, which this module passes through and does not re-validate.
+
+    scope_id:         Resource the rule queries. Defaults to this module's Key Vault, so the query
+                      only sees that vault's logs, in whichever workspace its diagnostic settings
+                      send them to. Set a workspace ID to query everything in that workspace.
+    action_group_ids: Action groups for this alert only, added to the module's action_group and
+                      action_group_ids.
+
+    criteria.query must be valid against the scope's schema, because Azure checks it on create unless
+    skip_query_validation is true. A query that splits by a column must project that column, and one
+    that aggregates a value must project the metric_measure_column.
+  EOT
+
   type = map(object({
-    data_source_id          = optional(string)
-    description             = optional(string, "")
-    enabled                 = optional(bool, true)
-    query                   = string
-    severity                = optional(number, 1)
-    frequency               = optional(number, 5)
-    time_window             = optional(number, 30)
-    authorized_resource_ids = optional(list(string), [])
-    trigger_operator        = optional(string, "GreaterThan")
-    trigger_threshold       = optional(number, 0)
-    action_group_ids        = optional(list(string), [])
-    email_subject           = optional(string, "Alert Notification")
-    custom_webhook_payload  = optional(string, "{}")
+    scope_id     = optional(string)
+    description  = optional(string, "")
+    display_name = optional(string)
+    enabled      = optional(bool, true)
+    severity     = optional(number, 1)
+
+    evaluation_frequency = optional(string, "PT5M")
+    window_duration      = optional(string, "PT30M")
+
+    criteria = object({
+      query                   = string
+      threshold               = number
+      operator                = optional(string, "GreaterThan")
+      time_aggregation_method = optional(string, "Count")
+      metric_measure_column   = optional(string)
+      resource_id_column      = optional(string)
+      dimensions = optional(list(object({
+        name     = string
+        values   = list(string)
+        operator = optional(string, "Include")
+      })), [])
+      failing_periods = optional(object({
+        minimum_failing_periods_to_trigger_alert = number
+        number_of_evaluation_periods             = number
+      }))
+    })
+
+    auto_mitigation_enabled           = optional(bool, false)
+    mute_actions_after_alert_duration = optional(string)
+    query_time_range_override         = optional(string)
+    skip_query_validation             = optional(bool, false)
+    target_resource_types             = optional(list(string), [])
+    workspace_alerts_storage_enabled  = optional(bool, false)
+
+    action_group_ids  = optional(list(string), [])
+    email_subject     = optional(string)
+    custom_properties = optional(map(string), {})
+
+    identity = optional(object({
+      type         = string
+      identity_ids = optional(list(string), [])
+    }))
   }))
 
-  default = {}
+  default  = {}
+  nullable = false
 
   validation {
     condition = alltrue([
-      for alert in values(var.scheduled_query_alerts) : can(jsondecode(alert.custom_webhook_payload))
+      for alert in values(var.scheduled_query_alerts) : alert.scope_id != null && alert.scope_id != ""
+      ]) || anytrue([
+      for setting in values(var.diagnostic_settings) : try(length(setting.enabled_log), 0) > 0
     ])
-    error_message = "Each scheduled query alert custom_webhook_payload must be a valid JSON string."
+    error_message = "Scheduled query alerts are scoped to the Key Vault by default, so diagnostic_settings must send at least one log category to a workspace. Add one, or set scope_id on every alert."
+  }
+
+  validation {
+    condition     = length(var.scheduled_query_alerts) == 0 || contains(keys(var.resource_names_map), "scheduled_query_alert")
+    error_message = "resource_names_map needs a scheduled_query_alert entry to name the scheduled query alerts."
   }
 }
 
@@ -503,11 +565,12 @@ variable "diagnostic_settings" {
     metrics = optional(list(object({
       category = string
       enabled  = optional(bool)
-    })))
+    })), [])
 
   }))
 
-  default = {}
+  default  = {}
+  nullable = false
 }
 
 ############################################################

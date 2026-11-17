@@ -45,6 +45,16 @@ output "private_endpoint_id" {
   value       = try(module.private_endpoint[0].id, "")
 }
 
+output "action_group_id" {
+  description = "ID of the action group the module creates, or null when action_group is not set"
+  value       = try(module.monitor_action_group[0].action_group_id, null)
+}
+
+output "log_analytics_workspace_id" {
+  description = "ID of the Log Analytics workspace the module creates, or null when log_analytics_workspace is not set"
+  value       = try(module.log_analytics_workspace[0].id, null)
+}
+
 output "certificate_ids" {
   description = "IDs of the certificates from the Key Vault in the reference module"
   value       = module.key_vault.certificate_ids
@@ -73,5 +83,13 @@ output "scheduled_query_alert_names" {
   value = {
     for name, module_ref in module.monitor_scheduled_query_alert :
     name => module_ref.scheduled_query_alert_name
+  }
+}
+
+output "scheduled_query_alert_principal_ids" {
+  description = "Principal IDs of the scheduled query alerts' SystemAssigned identities, for granting them read access to the resources their queries read. Null for alerts with no identity, and empty for UserAssigned."
+  value = {
+    for name, module_ref in module.monitor_scheduled_query_alert :
+    name => module_ref.scheduled_query_alert_principal_id
   }
 }

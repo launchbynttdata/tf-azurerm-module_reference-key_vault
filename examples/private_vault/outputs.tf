@@ -49,3 +49,28 @@ output "key_ids" {
   description = "IDs of the keys from the Key Vault in the reference module"
   value       = module.key_vault.key_ids
 }
+
+output "scheduled_query_alert_ids" {
+  description = "IDs of the scheduled query alerts created by the reference module"
+  value       = module.key_vault.scheduled_query_alert_ids
+}
+
+output "scheduled_query_alert_names" {
+  description = "Names of the scheduled query alerts created by the reference module"
+  value       = module.key_vault.scheduled_query_alert_names
+}
+
+output "private_endpoint_id" {
+  description = "ID of the private endpoint, or an empty string when public network access is enabled"
+  value       = module.key_vault.private_endpoint_id
+}
+
+output "action_group_id" {
+  description = "ID of the action group the reference module creates"
+  value       = module.key_vault.action_group_id
+}
+
+output "log_analytics_workspace_id" {
+  description = "ID of the Log Analytics workspace the reference module creates"
+  value       = module.key_vault.log_analytics_workspace_id
+}

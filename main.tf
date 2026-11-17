@@ -29,7 +29,7 @@ module "resource_names" {
 
 module "resource_group" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/resource_group/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   name     = local.resource_group_name
   location = var.location
@@ -38,7 +38,7 @@ module "resource_group" {
 
 module "key_vault" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.1"
 
   resource_group = local.resource_group
   key_vault_name = local.key_vault_name
@@ -60,7 +60,7 @@ module "key_vault" {
 
 module "role_assignment" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/role_assignment/azurerm"
-  version = "~> 1.2.1"
+  version = "~> 2.0"
 
   for_each = var.role_assignments
 
@@ -74,7 +74,7 @@ module "role_assignment" {
 
 module "secrets" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_secret/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.1"
 
   for_each = var.secrets
 
@@ -87,7 +87,7 @@ module "secrets" {
 
 module "imported_certificates" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.1"
 
   for_each = var.certificates
 
@@ -106,7 +106,7 @@ module "imported_certificates" {
 
 module "certificate_issuers" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate_issuer/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.1"
 
   for_each = var.certificate_issuers
 
@@ -125,7 +125,7 @@ module "certificate_issuers" {
 
 module "generated_certificates" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/key_vault_certificate/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.1"
 
   for_each = var.generated_certificates
 
@@ -145,7 +145,7 @@ module "generated_certificates" {
 
 module "private_endpoint" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/private_endpoint/azurerm"
-  version = "~> 1.0"
+  version = "~> 3.0"
 
   count = var.public_network_access_enabled ? 0 : 1
 
@@ -169,7 +169,7 @@ module "private_endpoint" {
 # Monitor Action Group
 module "monitor_action_group" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/monitor_action_group/azurerm"
-  version = "~> 1.0.0"
+  version = "~> 1.2"
 
   count               = var.action_group != null ? 1 : 0
   action_group_name   = var.action_group.name
@@ -186,7 +186,7 @@ module "monitor_action_group" {
 # Monitor Metric Alerts (for Key Vault)
 module "monitor_metric_alert" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/monitor_metric_alert/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   for_each            = var.metric_alerts
   name                = each.key
@@ -216,37 +216,44 @@ module "monitor_metric_alert" {
 }
 module "monitor_scheduled_query_alert" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/monitor_scheduled_query_alert/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   for_each = var.scheduled_query_alerts
 
   resource_group_name = local.resource_group_name
   location            = var.location
-  alert_name          = each.key
+  alert_name          = local.scheduled_query_alert_names[each.key]
 
-  data_source_id = coalesce(
-    each.value.data_source_id,
-    try(module.log_analytics_workspace[0].id, null),
-    var.log_analytics_workspace_id
-  )
+  scope_id = coalesce(each.value.scope_id, module.key_vault.key_vault_id)
 
-  description             = each.value.description
-  enabled                 = each.value.enabled
-  query                   = each.value.query
-  severity                = each.value.severity
-  frequency               = each.value.frequency
-  time_window             = each.value.time_window
-  authorized_resource_ids = each.value.authorized_resource_ids
-  trigger_operator        = each.value.trigger_operator
-  trigger_threshold       = each.value.trigger_threshold
-  email_subject           = each.value.email_subject
-  custom_webhook_payload  = each.value.custom_webhook_payload
+  description  = each.value.description
+  display_name = each.value.display_name
+  enabled      = each.value.enabled
+  severity     = each.value.severity
+
+  evaluation_frequency = each.value.evaluation_frequency
+  window_duration      = each.value.window_duration
+
+  criteria = each.value.criteria
+
+  auto_mitigation_enabled           = each.value.auto_mitigation_enabled
+  mute_actions_after_alert_duration = each.value.mute_actions_after_alert_duration
+  query_time_range_override         = each.value.query_time_range_override
+  skip_query_validation             = each.value.skip_query_validation
+  target_resource_types             = each.value.target_resource_types
+  workspace_alerts_storage_enabled  = each.value.workspace_alerts_storage_enabled
+
+  email_subject     = each.value.email_subject
+  custom_properties = each.value.custom_properties
+  identity          = each.value.identity
 
   action_group_ids = concat(
     var.action_group != null ? [module.monitor_action_group[0].action_group_id] : [],
     var.action_group_ids,
     each.value.action_group_ids
   )
+
+  tags = merge({ resource_name = local.scheduled_query_alert_names[each.key] }, local.default_tags, var.tags)
 
   depends_on = [
     module.key_vault,
@@ -261,7 +268,7 @@ module "monitor_scheduled_query_alert" {
 
 module "log_analytics_workspace" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/log_analytics_workspace/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   count = var.log_analytics_workspace != null ? 1 : 0
 
@@ -271,6 +278,7 @@ module "log_analytics_workspace" {
 
   sku                           = var.log_analytics_workspace.sku
   retention_in_days             = var.log_analytics_workspace.retention_in_days
+  daily_quota_gb                = var.log_analytics_workspace.daily_quota_gb
   identity                      = var.log_analytics_workspace.identity
   local_authentication_disabled = var.log_analytics_workspace.local_authentication_disabled
 
@@ -286,7 +294,7 @@ module "log_analytics_workspace" {
 # Diagnostic Settings for Key Vault
 module "diagnostic_setting" {
   source  = "terraform.registry.launch.nttdata.com/module_primitive/monitor_diagnostic_setting/azurerm"
-  version = "~> 3.0"
+  version = "~> 5.0"
 
   for_each = var.diagnostic_settings
 

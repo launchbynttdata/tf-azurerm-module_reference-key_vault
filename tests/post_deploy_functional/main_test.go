@@ -33,5 +33,5 @@ func TestVaultKeyModule(t *testing.T) {
 		SetTestConfigFileName(infraTFVarFileNameDefault).
 		Build()
 
-	lib.RunSetupTestTeardown(t, *ctx, testimpl.TestKeyVaultComplete)
+	lib.RunSetupTestTeardown(t, *ctx, testimpl.TestComposableKeyVault)
 }

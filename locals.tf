@@ -24,6 +24,11 @@ locals {
   resource_group_tags   = merge({ resource_name = local.resource_group_name }, local.default_tags, var.tags)
   private_endpoint_tags = merge({ resource_name = local.endpoint_name }, local.default_tags, var.tags)
 
+  scheduled_query_alert_names = {
+    for key in keys(var.scheduled_query_alerts) :
+    key => "${try(module.resource_names["scheduled_query_alert"].standard, "")}-${key}"
+  }
+
   resource_group = {
     name     = local.resource_group_name
     location = var.location
