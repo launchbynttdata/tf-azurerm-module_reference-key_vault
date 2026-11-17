@@ -67,8 +67,8 @@ variable "sku_name" {
 
 variable "access_policies" {
   description = <<EOT
-    Additional Access policies for the vault except the current user which are added by default.
-    Required only when enable_rbac_authorization is set to false.
+    Access policies for the vault, used only when enable_rbac_authorization is false. In that mode an access policy
+    for the identity running Terraform is added by default.
   EOT
   type = map(object({
     object_id               = string
@@ -236,6 +236,7 @@ variable "resource_names_map" {
       max_length = 60
     }
   }
+  nullable = false
 }
 variable "environment" {
   description = "Environment in which the resource should be provisioned like dev, qa, prod etc."
@@ -531,7 +532,8 @@ variable "scheduled_query_alerts" {
     }))
   }))
 
-  default = {}
+  default  = {}
+  nullable = false
 
   validation {
     condition = alltrue([
@@ -567,7 +569,8 @@ variable "diagnostic_settings" {
 
   }))
 
-  default = {}
+  default  = {}
+  nullable = false
 }
 
 ############################################################

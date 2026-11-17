@@ -26,7 +26,7 @@ locals {
 
   scheduled_query_alert_names = {
     for key in keys(var.scheduled_query_alerts) :
-    key => "${module.resource_names["scheduled_query_alert"].standard}-${key}"
+    key => "${try(module.resource_names["scheduled_query_alert"].standard, "")}-${key}"
   }
 
   resource_group = {

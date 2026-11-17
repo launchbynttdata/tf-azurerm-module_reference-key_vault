@@ -85,10 +85,13 @@
 | Name | Description |
 |------|-------------|
 | <a name="output_access_policies_object_ids"></a> [access\_policies\_object\_ids](#output\_access\_policies\_object\_ids) | n/a |
+| <a name="output_action_group_id"></a> [action\_group\_id](#output\_action\_group\_id) | ID of the action group the reference module creates |
 | <a name="output_certificate_ids"></a> [certificate\_ids](#output\_certificate\_ids) | IDs of the certificates from the Key Vault in the reference module |
 | <a name="output_key_ids"></a> [key\_ids](#output\_key\_ids) | IDs of the keys from the Key Vault in the reference module |
 | <a name="output_key_vault_id"></a> [key\_vault\_id](#output\_key\_vault\_id) | n/a |
 | <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | n/a |
+| <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id) | ID of the Log Analytics workspace the reference module creates |
+| <a name="output_private_endpoint_id"></a> [private\_endpoint\_id](#output\_private\_endpoint\_id) | ID of the private endpoint, or an empty string when public network access is enabled |
 | <a name="output_resource_group_id"></a> [resource\_group\_id](#output\_resource\_group\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_scheduled_query_alert_ids"></a> [scheduled\_query\_alert\_ids](#output\_scheduled\_query\_alert\_ids) | IDs of the scheduled query alerts created by the reference module |

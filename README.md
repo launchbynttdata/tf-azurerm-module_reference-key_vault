@@ -11,6 +11,23 @@ provision a Private Key Vault with private endpoints in a provided subnet.
 The module also supports Azure Monitor integration through action groups, metric alerts, diagnostic settings, Log Analytics
 workspaces, and scheduled query alerts for Key Vault log-based detections.
 
+The vault uses Azure RBAC by default, so the identity running Terraform needs a data-plane role to create the `secrets`,
+`certificates` and certificate issuers this module manages. Grant it one through `role_assignments`, as the examples do
+in `locals.tf`:
+
+```hcl
+role_assignments = {
+  current_user = {
+    role_definition_name = "Key Vault Administrator"
+    principal_id         = data.azurerm_client_config.current.object_id
+    principal_type       = "ServicePrincipal"
+  }
+}
+```
+
+A new role assignment can take a few minutes to take effect, so the first apply can fail on those writes and succeed when
+re-run.
+
 ## Upgrading from 2.x
 
 3.0.0 moves the module to azurerm v4, and moves the composed `monitor_scheduled_query_alert` primitive
@@ -100,6 +117,10 @@ returns nothing and the alert never fires, so the plan fails when an alert has n
 diagnostic setting sends a log category. To keep the 2.x behaviour, set `scope_id` to the workspace
 ID.
 
+The check only sees diagnostic settings this module creates. When something else sends the vault's
+logs, such as an Azure Policy assignment, set `scope_id` on each alert to the workspace that receives
+them.
+
 ### Key Vault defaults are secure by default
 
 Two defaults change. Set each one explicitly to keep the 2.x behaviour.
@@ -166,7 +187,7 @@ No resources.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_access_policies"></a> [access\_policies](#input\_access\_policies) | Additional Access policies for the vault except the current user which are added by default.<br/>    Required only when enable\_rbac\_authorization is set to false. | <pre>map(object({<br/>    object_id               = string<br/>    tenant_id               = string<br/>    key_permissions         = list(string)<br/>    certificate_permissions = list(string)<br/>    secret_permissions      = list(string)<br/>    storage_permissions     = list(string)<br/>  }))</pre> | `{}` | no |
+| <a name="input_access_policies"></a> [access\_policies](#input\_access\_policies) | Access policies for the vault, used only when enable\_rbac\_authorization is false. In that mode an access policy<br/>    for the identity running Terraform is added by default. | <pre>map(object({<br/>    object_id               = string<br/>    tenant_id               = string<br/>    key_permissions         = list(string)<br/>    certificate_permissions = list(string)<br/>    secret_permissions      = list(string)<br/>    storage_permissions     = list(string)<br/>  }))</pre> | `{}` | no |
 | <a name="input_action_group"></a> [action\_group](#input\_action\_group) | An action group object. Each action group can have:<br/>  - short\_name: (Required) The short name of the action group<br/>  - arm\_role\_receivers: (Optional) List of ARM role receivers<br/>  - email\_receivers: (Optional) List of email receivers | <pre>object({<br/>    name       = string<br/>    short_name = string<br/><br/>    arm_role_receivers = optional(list(object({<br/>      name                    = string<br/>      role_id                 = string<br/>      use_common_alert_schema = optional(bool)<br/>    })), [])<br/><br/>    email_receivers = optional(list(object({<br/>      name                    = string<br/>      email_address           = string<br/>      use_common_alert_schema = optional(bool)<br/>    })), [])<br/>  })</pre> | `null` | no |
 | <a name="input_action_group_ids"></a> [action\_group\_ids](#input\_action\_group\_ids) | A list of action group IDs. | `list(string)` | `[]` | no |
 | <a name="input_certificate_issuers"></a> [certificate\_issuers](#input\_certificate\_issuers) | List of certificate issuers to be created | <pre>map(object({<br/>    provider_name = string<br/>    org_id        = string<br/>    account_id    = string<br/>    password      = string<br/><br/>    admins = optional(list(object({<br/>      email_address = string<br/>      first_name    = optional(string)<br/>      last_name     = optional(string)<br/>      phone         = optional(string)<br/>    })), [])<br/>  }))</pre> | `{}` | no |
@@ -209,10 +230,12 @@ No resources.
 | Name | Description |
 |------|-------------|
 | <a name="output_access_policies_object_ids"></a> [access\_policies\_object\_ids](#output\_access\_policies\_object\_ids) | Object IDs of the Key Vault Access Policies |
+| <a name="output_action_group_id"></a> [action\_group\_id](#output\_action\_group\_id) | ID of the action group the module creates, or null when action\_group is not set |
 | <a name="output_certificate_ids"></a> [certificate\_ids](#output\_certificate\_ids) | IDs of the certificates from the Key Vault in the reference module |
 | <a name="output_key_ids"></a> [key\_ids](#output\_key\_ids) | IDs of the keys from the Key Vault in the reference module |
 | <a name="output_key_vault_id"></a> [key\_vault\_id](#output\_key\_vault\_id) | ID of the Key Vault |
 | <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | Name of the Key Vault |
+| <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id) | ID of the Log Analytics workspace the module creates, or null when log\_analytics\_workspace is not set |
 | <a name="output_private_endpoint_id"></a> [private\_endpoint\_id](#output\_private\_endpoint\_id) | ID of the Private Endpoint |
 | <a name="output_resource_group_id"></a> [resource\_group\_id](#output\_resource\_group\_id) | ID of the Resource Group |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | Name of the Resource Group |
