@@ -20,9 +20,8 @@ from 1.x to 2.x, which replaces `azurerm_monitor_scheduled_query_rules_alert` wi
 The Terraform constraint moves from `~> 1.5` to `~> 1.9`, because two input validations compare
 variables with each other, which Terraform supports from 1.9.
 
-Every other composed primitive moves to its current major. Their inputs, outputs and resource
-addresses are unchanged across those bumps, so the bumps alone move nothing in state. Moving from
-azurerm 3.x to 4.x can still change other resources, so read your own plan before applying.
+Every other composed primitive moves to its current major. Moving from azurerm 3.x to 4.x can change
+other resources, so read your own plan before applying.
 
 Terraform uses one azurerm version for the whole configuration, so the rest of your configuration
 must also work on azurerm 4.x. In particular, the 4.x provider requires a subscription ID, set as
@@ -32,8 +31,7 @@ lists the other provider-level changes.
 
 ### `scheduled_query_alerts` is a different shape
 
-Every alert field except `description`, `enabled`, `severity` and `action_group_ids` changed. The map
-now takes a nested `criteria` object instead of flat `query` / `trigger_*` fields, and ISO 8601
+The map takes a nested `criteria` object instead of flat `query` / `trigger_*` fields, and ISO 8601
 durations instead of minutes:
 
 | 2.x | 3.x |
@@ -49,7 +47,7 @@ durations instead of minutes:
 | — | `display_name`, `auto_mitigation_enabled`, `mute_actions_after_alert_duration`, `query_time_range_override`, `skip_query_validation`, `target_resource_types`, `workspace_alerts_storage_enabled` |
 
 With the default `criteria.time_aggregation_method` of `Count`, the threshold is compared with the
-number of rows the query returns, as the 2.x trigger was.
+number of rows the query returns.
 
 `custom_properties` is a replacement rather than a rename: the 2.x value was the entire webhook JSON
 body, while `custom_properties` is a flat map of properties added to Azure's own alert payload.
@@ -60,6 +58,11 @@ gives the principal of a SystemAssigned identity.
 
 An unset `email_subject` leaves the subject to Azure. Set it to keep the 2.x `"Alert Notification"`
 subject.
+
+Terraform drops object attributes a type does not declare, without an error. A 2.x field left in an
+alert, such as `data_source_id`, `authorized_resource_ids` or `custom_webhook_payload`, is ignored
+rather than rejected; a leftover `data_source_id` leaves the alert on the Key Vault scope. Rename each
+field as the table shows.
 
 Alerts are now tagged like the module's other resources: `resource_name` (the alert name),
 `provisioner = "terraform"`, and `tags`, which overrides both.
@@ -99,21 +102,31 @@ ID.
 
 ### Key Vault defaults are secure by default
 
-Three defaults change. Set each one explicitly to keep the 2.x behaviour.
+Two defaults change. Set each one explicitly to keep the 2.x behaviour.
 
 | Input | 2.x default | 3.x default | What changes on an existing vault that used the default |
 |-------|-------------|-------------|----------------------------------------------------------|
 | `enable_rbac_authorization` | `false` | `true` | Authorization switches from access policies to Azure RBAC. `access_policies` stop applying, so grant access through `role_assignments` first. |
 | `purge_protection_enabled` | `false` | `true` | Purge protection is enabled. **This cannot be undone:** a deleted vault can then only be purged after its retention period. |
-| `public_network_access_enabled` | `true` | `false` | Public access is turned off and the module creates a private endpoint, so `subnet_id` is required. The plan fails without it. |
 
-`soft_delete_retention_days` stays at `7`. Azure does not allow changing it once a vault exists, so a
-new default would fail every upgrade.
+Setting `public_network_access_enabled = false` now fails the plan unless `subnet_id` is set, for the
+private endpoint the module creates.
+
+Before adopting the new defaults on an existing vault:
+
+- **RBAC needs a data-plane role for every identity that used an access policy, Terraform included.**
+  Grant one, such as Key Vault Administrator for Terraform, through `role_assignments`. A role can take
+  a few minutes to take effect, so an apply that switches the model and then writes secrets in the
+  same run can fail on the first attempt. Microsoft's documentation says that changing a vault's
+  permission model also needs `Microsoft.Authorization/roleAssignments/write`, such as Owner or User
+  Access Administrator.
 
 ### Other changes
 
 - `log_analytics_workspace.daily_quota_gb` now reaches the workspace. In 2.x it was required but
-  ignored, so the workspace had no daily cap.
+  ignored, so the workspace had no daily cap. Review the value you pass: a small quota stops
+  ingestion for the rest of the day once reached, and alerts that query the workspace go quiet. Use
+  `-1` for no cap.
 - `metric_alerts.action_groups` is removed. It was never used; alerts take `action_group` and
   `action_group_ids`.
 - The unused `diagnostic_setting` entry is removed from the default `resource_names_map`.
@@ -176,7 +189,7 @@ No resources.
 | <a name="input_network_acls"></a> [network\_acls](#input\_network\_acls) | Network ACLs for the key vault | <pre>object({<br/>    bypass                     = string<br/>    default_action             = string<br/>    ip_rules                   = optional(list(string))<br/>    virtual_network_subnet_ids = optional(list(string))<br/>  })</pre> | <pre>{<br/>  "bypass": "AzureServices",<br/>  "default_action": "Allow",<br/>  "ip_rules": [],<br/>  "virtual_network_subnet_ids": []<br/>}</pre> | no |
 | <a name="input_private_dns_zone_group_name"></a> [private\_dns\_zone\_group\_name](#input\_private\_dns\_zone\_group\_name) | Specifies the Name of the Private DNS Zone Group. | `string` | `"vault"` | no |
 | <a name="input_private_dns_zone_ids"></a> [private\_dns\_zone\_ids](#input\_private\_dns\_zone\_ids) | A list of Private DNS Zone IDs to link with the Private Endpoint. | `list(string)` | `[]` | no |
-| <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | (Optional) Whether public network access is allowed for this Key Vault. Defaults to false, in which case only private<br/>    endpoints can access the Key Vault and subnet\_id is required for the one this module creates. | `bool` | `false` | no |
+| <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | (Optional) Whether public network access is allowed for this Key Vault. Defaults to true. If false, then only private<br/>    endpoints can access the Key Vault and subnet\_id is required for the one this module creates. | `bool` | `true` | no |
 | <a name="input_purge_protection_enabled"></a> [purge\_protection\_enabled](#input\_purge\_protection\_enabled) | If purge protection is enabled. Once enabled on a Key Vault it cannot be disabled, and a deleted vault<br/>    cannot be purged before soft\_delete\_retention\_days have passed. | `bool` | `true` | no |
 | <a name="input_request_message"></a> [request\_message](#input\_request\_message) | A message passed to the owner of the remote resource when the private endpoint attempts to establish the connection<br/>    to the remote resource. The request message can be a maximum of 140 characters in length.<br/>    Only valid if `is_manual_connection=true` | `string` | `""` | no |
 | <a name="input_resource_names_map"></a> [resource\_names\_map](#input\_resource\_names\_map) | A map of key to resource\_name that will be used by tf-launch-module\_library-resource\_name to generate resource names | <pre>map(object({<br/>    name       = string<br/>    max_length = optional(number, 60)<br/>  }))</pre> | <pre>{<br/>  "key_vault": {<br/>    "max_length": 24,<br/>    "name": "kv"<br/>  },<br/>  "log_analytics_workspace": {<br/>    "max_length": 80,<br/>    "name": "law"<br/>  },<br/>  "private_endpoint": {<br/>    "max_length": 80,<br/>    "name": "pe"<br/>  },<br/>  "private_service_connection": {<br/>    "max_length": 80,<br/>    "name": "pesc"<br/>  },<br/>  "resource_group": {<br/>    "max_length": 80,<br/>    "name": "rg"<br/>  },<br/>  "scheduled_query_alert": {<br/>    "max_length": 60,<br/>    "name": "sqa"<br/>  }<br/>}</pre> | no |

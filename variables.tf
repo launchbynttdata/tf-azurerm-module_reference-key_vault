@@ -107,11 +107,11 @@ variable "network_acls" {
 
 variable "public_network_access_enabled" {
   description = <<EOT
-    (Optional) Whether public network access is allowed for this Key Vault. Defaults to false, in which case only private
+    (Optional) Whether public network access is allowed for this Key Vault. Defaults to true. If false, then only private
     endpoints can access the Key Vault and subnet_id is required for the one this module creates.
   EOT
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "certificates" {
@@ -315,7 +315,7 @@ variable "subnet_id" {
   default     = null
 
   validation {
-    condition     = var.public_network_access_enabled || var.subnet_id != null
+    condition     = var.public_network_access_enabled || (var.subnet_id != null && var.subnet_id != "")
     error_message = "subnet_id is required when public_network_access_enabled is false, for the private endpoint this module creates."
   }
 }
@@ -535,11 +535,16 @@ variable "scheduled_query_alerts" {
 
   validation {
     condition = alltrue([
-      for alert in values(var.scheduled_query_alerts) : alert.scope_id != null
+      for alert in values(var.scheduled_query_alerts) : alert.scope_id != null && alert.scope_id != ""
       ]) || anytrue([
       for setting in values(var.diagnostic_settings) : try(length(setting.enabled_log), 0) > 0
     ])
     error_message = "Scheduled query alerts are scoped to the Key Vault by default, so diagnostic_settings must send at least one log category to a workspace. Add one, or set scope_id on every alert."
+  }
+
+  validation {
+    condition     = length(var.scheduled_query_alerts) == 0 || contains(keys(var.resource_names_map), "scheduled_query_alert")
+    error_message = "resource_names_map needs a scheduled_query_alert entry to name the scheduled query alerts."
   }
 }
 

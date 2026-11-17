@@ -30,6 +30,12 @@ var expectedCustomProperties = map[string]string{
 	"service":   "key-vault",
 }
 
+// Public network access configured by each example's test.tfvars, keyed by example directory.
+var expectedPublicNetworkAccess = map[string]string{
+	"public_vault":  "Enabled",
+	"private_vault": "Disabled",
+}
+
 func TestComposableKeyVault(t *testing.T, ctx types.TestContext) {
 	subscriptionId := os.Getenv("ARM_SUBSCRIPTION_ID")
 	if len(subscriptionId) == 0 {
@@ -43,6 +49,10 @@ func TestComposableKeyVault(t *testing.T, ctx types.TestContext) {
 
 	t.Run("TestKeyVaultID", func(t *testing.T) {
 		checkKeyVaultID(t, ctx, subscriptionId, cred)
+	})
+
+	t.Run("TestKeyVaultSettings", func(t *testing.T) {
+		checkKeyVaultSettings(t, ctx, subscriptionId, cred)
 	})
 
 	t.Run("TestScheduledQueryAlert", func(t *testing.T) {
@@ -65,6 +75,31 @@ func checkKeyVaultID(t *testing.T, ctx types.TestContext, subscriptionId string,
 	actualKeyVaultID := *vault.ID
 
 	assert.Equal(t, keyVaultID, actualKeyVaultID, "Key Vault ID does not match")
+}
+
+func checkKeyVaultSettings(t *testing.T, ctx types.TestContext, subscriptionId string, cred *azidentity.DefaultAzureCredential) {
+	resourceGroupName := terraform.Output(t, ctx.TerratestTerraformOptions(), "resource_group_name")
+	keyVaultName := terraform.Output(t, ctx.TerratestTerraformOptions(), "key_vault_name")
+
+	vault, err := getKeyVaultClient(t, subscriptionId, cred).Get(context.TODO(), resourceGroupName, keyVaultName, nil)
+	require.NoError(t, err, "failed to get key vault")
+	properties := vault.Properties
+	require.NotNil(t, properties)
+
+	// Both examples set enable_rbac_authorization = true and purge_protection_enabled = false.
+	require.NotNil(t, properties.EnableRbacAuthorization)
+	assert.Equal(t, true, *properties.EnableRbacAuthorization)
+
+	purgeProtection := false
+	if properties.EnablePurgeProtection != nil {
+		purgeProtection = *properties.EnablePurgeProtection
+	}
+	assert.Equal(t, false, purgeProtection)
+
+	expectedAccess, ok := expectedPublicNetworkAccess[ctx.CurrentTestName()]
+	require.True(t, ok, "no expected public network access for example %q", ctx.CurrentTestName())
+	require.NotNil(t, properties.PublicNetworkAccess)
+	assert.Equal(t, expectedAccess, *properties.PublicNetworkAccess)
 }
 
 func checkScheduledQueryAlert(t *testing.T, ctx types.TestContext, subscriptionId string, cred *azidentity.DefaultAzureCredential) {
